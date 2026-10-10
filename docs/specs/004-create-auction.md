@@ -1,7 +1,7 @@
 # 004: Create auction
 
 Branch: `feat/004-create-auction`  
-Status: validated
+Status: implemented, pending review
 
 ## User story
 > As a seller, I can put my car up for auction with a starting price, a minimum bid increment and an end time, so that buyers can bid on it.
