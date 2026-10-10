@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -154,6 +155,14 @@ class BidControllerTests {
 				.andExpect(status().isUnprocessableContent())
 				.andExpect(jsonPath("$.minimumBid").value("1100.00"))
 				.andExpect(jsonPath("$.detail").value("The bid must be at least 1100.00"));
+	}
+
+	@Test
+	void a_version_conflict_is_a_conflict_to_reload_and_retry() throws Exception {
+		rejectWith(new ObjectOptimisticLockingFailureException("AuctionEntity", 5L))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.title").value("Bid conflict"))
+				.andExpect(jsonPath("$.detail").value("bid conflict, reload and retry"));
 	}
 
 	@Test

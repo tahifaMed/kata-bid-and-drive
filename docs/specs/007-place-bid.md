@@ -105,7 +105,7 @@ Given / When / Then. Each criterion maps to at least one test.
 4. Done. **Backend API, read side** (criteria 1 `sellerId` and list `bidCount`, 8 for `GET`).
    - `GET` single bid under [ADR 0013](../adr/0013-bid-resource-visibility.md).
    - `sellerId` on the detail, real `bidCount` on the list.
-5. **Backend concurrency** (criteria 7, 9 parallel).
+5. Done. **Backend concurrency** (criteria 7, 9 parallel).
    - Version-conflict mapping to 409.
    - 20-bidder parallel test and the parallel double post, against a real server and database, not transactional.
 6. **Frontend** (criteria 10, 11).

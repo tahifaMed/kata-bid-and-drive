@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -39,6 +40,17 @@ class BidExceptionHandler {
 				yield problem;
 			}
 		};
+	}
+
+	/**
+	 * Another bid changed the auction first. It can be raised at commit, after the use case returned.
+	 * No retry: the client reloads and decides again (ADR 0003).
+	 */
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	ProblemDetail handleVersionConflict(ObjectOptimisticLockingFailureException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "bid conflict, reload and retry");
+		problem.setTitle("Bid conflict");
+		return problem;
 	}
 
 	@ExceptionHandler(InvalidBidException.class)
