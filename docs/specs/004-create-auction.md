@@ -46,8 +46,8 @@ Given / When / Then. Each criterion maps to at least one test.
 - The confirmation link points at `/auctions/{id}`. That route is added by 006. Until 006 lands the link leads to the router's not-found handling; the test checks only the href.
 
 ## Slices
-1. Backend persistence: Flyway V3 creates `auction` and `car` tables (`car.auction_id` unique, check constraints for positive money and non-negative mileage), JPA entities and the repository adapter. Testcontainers test: one POST-equivalent save stores one auction row and one car row, and a second car for the same auction is rejected. Covers criteria: 5.
-2. Backend domain and use case: `Auction`, `Car`, `Money`, `AuctionWindow`, `CreateAuction` with `Clock` checks for `endsAt` and the year bound. Domain unit tests with a fixed clock, including boundaries. Covers criteria: 3.
+1. Backend domain and use case: `Auction`, `Car`, `Money`, `AuctionWindow`, `InvalidAuctionException`, `CreateAuction` with `Clock` checks for `endsAt` and the year bound. Domain unit tests with a fixed clock, including boundaries. Covers criteria: 3.
+2. Backend persistence: Flyway V3 creates `auction` and `car` tables (`car.auction_id` unique, check constraints for positive money and non-negative mileage), JPA entities and the repository adapter. Testcontainers test: saving one auction stores one auction row and one car row, and a second car for the same auction is rejected. Covers criteria: 5.
 3. Backend web: `POST /api/auctions` controller, request DTO, Bean Validation, ProblemDetail errors, 201 with `Location`, 401 through `@CurrentUser`. Integration tests for each error case, including the identity variants of 003. Covers criteria: 1, 2, 4.
 4. Frontend: `CreateAuctionView`, `AuctionForm`, route, "Sell a car" link, confirmation, in-flight and error states. Covers criteria: 6, 7, 8.
 
