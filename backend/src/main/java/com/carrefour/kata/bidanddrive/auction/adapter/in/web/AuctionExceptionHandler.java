@@ -1,5 +1,6 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.application.AuctionNotFoundException;
 import com.carrefour.kata.bidanddrive.auction.domain.InvalidAuctionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -35,7 +36,14 @@ class AuctionExceptionHandler {
 		return invalid(errors);
 	}
 
-	/** A paging value that is not a whole number, such as {@code page=abc}. */
+	@ExceptionHandler(AuctionNotFoundException.class)
+	ProblemDetail handleNotFound(AuctionNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setTitle("Auction not found");
+		return problem;
+	}
+
+	/** A paging value or an auction id that is not a whole number, such as {@code page=abc}. */
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	ProblemDetail handleNotANumber(MethodArgumentTypeMismatchException exception) {
 		return invalid(List.of(Map.of("field", exception.getName(), "message", "must be a whole number")));
