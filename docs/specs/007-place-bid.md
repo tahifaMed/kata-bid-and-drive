@@ -1,7 +1,7 @@
 # 007: Place a bid
 
 Branch: `feat/007-place-bid`  
-Status: in-progress
+Status: implemented, pending review
 
 ## User story
 > As a buyer, I can place a bid on an open auction, so that I can compete for the car.
