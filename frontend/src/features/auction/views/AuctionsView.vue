@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UserSwitcher from '../../../components/UserSwitcher.vue'
 import AuctionCard from '../components/AuctionCard.vue'
 import { sampleAuctions } from '../data/sampleAuctions'
 
@@ -27,6 +28,7 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
             class="field sm:w-80"
             placeholder="Search for cars (ex. BMW, Audi, Ford)"
           />
+          <UserSwitcher />
           <button type="button" class="btn btn-outline">Sell a car</button>
           <button type="button" class="btn btn-primary">Sign up</button>
         </div>

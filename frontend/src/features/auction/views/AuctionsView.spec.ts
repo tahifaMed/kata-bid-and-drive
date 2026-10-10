@@ -1,3 +1,4 @@
+import { createPinia } from 'pinia'
 import { cleanup, render, screen, within } from '@testing-library/vue'
 import { afterEach, describe, expect, it } from 'vitest'
 import AuctionsView from './AuctionsView.vue'
@@ -7,13 +8,13 @@ afterEach(() => cleanup())
 
 describe('AuctionsView', () => {
   it('shows the live auctions heading', () => {
-    render(AuctionsView)
+    render(AuctionsView, { global: { plugins: [createPinia()] } })
 
     expect(screen.getByRole('heading', { level: 1, name: 'Live auctions' })).toBeTruthy()
   })
 
   it('lists exactly eight sample listings in the main content', () => {
-    render(AuctionsView)
+    render(AuctionsView, { global: { plugins: [createPinia()] } })
 
     const items = within(screen.getByRole('main')).getAllByRole('listitem')
     expect(items.length).toBe(8)
@@ -21,7 +22,7 @@ describe('AuctionsView', () => {
   })
 
   it('credits every photo in the footer with its licence and a Commons link', () => {
-    render(AuctionsView)
+    render(AuctionsView, { global: { plugins: [createPinia()] } })
 
     const footer = screen.getByRole('contentinfo')
     for (const auction of sampleAuctions) {
