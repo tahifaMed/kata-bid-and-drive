@@ -1,7 +1,7 @@
 # 005: List open auctions
 
 Branch: `feat/005-list-open-auctions`  
-Status: draft, reviewed 2026-10-10, questions answered (see "Answered questions")
+Status: implemented, pending review
 
 ## Where we are
 - Merged: 001 (Postgres), 002 (design system and static page), 003 (identity and user switcher), 004 (create auction, PR #6).
