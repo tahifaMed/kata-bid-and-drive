@@ -1,6 +1,7 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.Bid;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -54,6 +55,11 @@ class ListOpenAuctionsTests {
 
 		@Override
 		public Auction save(Auction auction) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
+		public Bid recordBid(Auction auction, Bid bid) {
 			throw new UnsupportedOperationException("not used by this test");
 		}
 

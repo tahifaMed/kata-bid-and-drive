@@ -36,9 +36,17 @@ class GetAuctionDetailTests {
 			new User(ALICE, "Alice"), new User(BOB, "Bob"), new User(CAROL, "Carol"));
 	private final List<Integer> requestedLimits = new ArrayList<>();
 	private final GetAuctionDetail getAuctionDetail = new GetAuctionDetail(auctions,
-			(auctionId, limit) -> {
-				requestedLimits.add(limit);
-				return bids.getOrDefault(auctionId, List.of());
+			new BidRepository() {
+				@Override
+				public List<Bid> findNewest(long auctionId, int limit) {
+					requestedLimits.add(limit);
+					return bids.getOrDefault(auctionId, List.of());
+				}
+
+				@Override
+				public Optional<Bid> findById(long auctionId, long bidId) {
+					throw new UnsupportedOperationException("not used by this test");
+				}
 			},
 			users, Clock.fixed(NOW, ZoneOffset.UTC));
 
@@ -164,6 +172,11 @@ class GetAuctionDetailTests {
 
 		@Override
 		public Auction save(Auction auction) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
+		public Bid recordBid(Auction auction, Bid bid) {
 			throw new UnsupportedOperationException("not used by this test");
 		}
 

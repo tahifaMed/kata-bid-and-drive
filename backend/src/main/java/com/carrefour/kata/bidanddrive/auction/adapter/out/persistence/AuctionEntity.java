@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,6 +42,19 @@ class AuctionEntity {
 
 	@OneToOne(mappedBy = "auction", cascade = CascadeType.ALL)
 	private CarEntity car;
+
+	@Column(name = "current_bid", precision = 12, scale = 2)
+	private BigDecimal currentBid;
+
+	@Column(name = "bid_count", nullable = false)
+	private int bidCount;
+
+	@Column(name = "highest_bidder_id")
+	private Long highestBidderId;
+
+	@Version
+	@Column(nullable = false)
+	private long version;
 
 	protected AuctionEntity() {
 	}
@@ -82,8 +96,30 @@ class AuctionEntity {
 		return car;
 	}
 
+	BigDecimal getCurrentBid() {
+		return currentBid;
+	}
+
+	int getBidCount() {
+		return bidCount;
+	}
+
+	Long getHighestBidderId() {
+		return highestBidderId;
+	}
+
+	long getVersion() {
+		return version;
+	}
+
 	void attachCar(CarEntity car) {
 		this.car = car;
+	}
+
+	void recordBid(BigDecimal amount, long bidderId, int bidCount) {
+		this.currentBid = amount;
+		this.highestBidderId = bidderId;
+		this.bidCount = bidCount;
 	}
 
 }

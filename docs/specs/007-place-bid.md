@@ -92,7 +92,7 @@ Given / When / Then. Each criterion maps to at least one test.
    - `Bid` gains `auctionId`, and `id` becomes a `Long` that is null until saved.
    - `Auction.placeBid(bidder, amount, now)` returns the updated auction and the new bid, or throws one of the bid rejections, in the check order above.
    - Unit tests use a fixed `Clock`.
-2. **Persistence** (criterion 1, storage part).
+2. Done. **Persistence** (criterion 1, storage part).
    - Flyway V4 adds to `auction`: `current_bid NUMERIC(12,2) NULL`, `bid_count INT NOT NULL DEFAULT 0 CHECK (bid_count >= 0)`, `highest_bidder_id BIGINT NULL REFERENCES app_user` and `version BIGINT NOT NULL DEFAULT 0`.
    - V4 creates `bid(id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, auction_id BIGINT NOT NULL REFERENCES auction, bidder_id BIGINT NOT NULL REFERENCES app_user, amount NUMERIC(12,2) NOT NULL CHECK (amount > 0), placed_at TIMESTAMPTZ NOT NULL)`, with an index on `(auction_id, placed_at DESC, id DESC)`.
    - `AuctionEntity` owns `@Version`. `AuctionRepository.recordBid` is added. A JPA bid adapter replaces `NoStoredBids`, with `findNewest` and `findById(auctionId, bidId)`.

@@ -55,7 +55,7 @@ class PostgresConfigurationTests {
 		assertThat(flyway.info().applied())
 				.as("baseline migration V1 must be applied on startup")
 				.isNotEmpty();
-		assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("3");
+		assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
 	}
 
 	@Test
