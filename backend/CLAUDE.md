@@ -25,7 +25,7 @@ Migrations live in `src/main/resources/db/migration`, named `V<n>__<description>
 - Errors use RFC 9457 `ProblemDetail`. Never leak stack traces.
 - Money is `BigDecimal` with scale 2. Time is `Instant`. Inject `Clock`, never call `Instant.now()` in domain code.
 - Concurrency: bids use optimistic locking (`@Version`) and a test with parallel bids.
-- Tests: JUnit 5 + AssertJ. Use `@MockitoBean`, never `@MockBean`. Testcontainers only when H2 can't prove the behaviour.
+- Tests: JUnit 5 + AssertJ. Use `@MockitoBean`, never `@MockBean`. Persistence tests run against real PostgreSQL via Testcontainers, never an in-memory database.
 
 ## Skills to read first
 - Spring Boot conventions: `spring-boot-conventions`

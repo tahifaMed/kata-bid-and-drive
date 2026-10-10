@@ -6,7 +6,7 @@ Spec-first: every feature starts as a numbered spec in `docs/specs/`. The spec i
 ## Stack
 - Backend: Java 25, Spring Boot 4.0.x (`backend/`, see `backend/CLAUDE.md`)
 - Frontend: Vue 3 + TypeScript + Vite + Pinia + Vue Router (`frontend/`, see `frontend/CLAUDE.md`)
-- Persistence: H2 for now, Flyway migrations
+- Persistence: PostgreSQL, Flyway migrations
 - Packaging and CI/CD: not in scope yet
 
 ## Commands

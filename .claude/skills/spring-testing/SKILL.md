@@ -9,7 +9,7 @@ description: Testing strategy and conventions for the Spring Boot backend: unit 
 - Domain rules: plain JUnit 5 + AssertJ. No Spring context. This is most of the test suite.
 - Use cases: JUnit 5 with hand-written fakes for ports, or `@MockitoBean` when a fake is overkill.
 - Web layer: `@WebMvcTest` with `@MockitoBean` for the use cases. Check status codes, JSON and `ProblemDetail` bodies.
-- Persistence: `@DataJpaTest` against H2. Check mappings and queries.
+- Persistence: `@DataJpaTest` against PostgreSQL via Testcontainers. Check mappings and queries.
 - End to end: `@SpringBootTest(webEnvironment = RANDOM_PORT)` only for a few critical flows.
 
 ## Rules
