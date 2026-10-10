@@ -1,5 +1,17 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.out.persistence;
 
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-interface AuctionJpaRepository extends JpaRepository<AuctionEntity, Long> {}
+import java.time.Instant;
+
+interface AuctionJpaRepository extends JpaRepository<AuctionEntity, Long> {
+
+	/** Loads the car with the auction, so listing does not run one query per row. */
+	@EntityGraph(attributePaths = "car")
+	Slice<AuctionEntity> findByStatusAndEndsAtAfter(AuctionStatus status, Instant now, Pageable pageable);
+
+}
