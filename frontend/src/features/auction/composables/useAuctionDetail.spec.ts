@@ -58,6 +58,47 @@ describe('useAuctionDetail', () => {
     expect(detail.state.value).toBe('error')
   })
 
+  it('ignores a slower response for an auction it no longer asks for', async () => {
+    let resolveFirst: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+    vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)))
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ id: 6 }))
+    const detail = useAuctionDetail()
+
+    const first = detail.load('5')
+    await detail.load('6')
+    resolveFirst(auctionDetail({ id: 5 }))
+    await first
+
+    expect(detail.auction.value?.id).toBe(6)
+    expect(detail.state.value).toBe('ready')
+  })
+
+  it('ignores a slower failure for an auction it no longer asks for', async () => {
+    let rejectFirst: (error: Error) => void = () => {}
+    vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((_, reject) => (rejectFirst = reject)))
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ id: 6 }))
+    const detail = useAuctionDetail()
+
+    const first = detail.load('5')
+    await detail.load('6')
+    rejectFirst(new ApiError(404, 'Not found'))
+    await first
+
+    expect(detail.state.value).toBe('ready')
+  })
+
+  it.each(['9007199254740993', '99999999999999999999999'])(
+    'reports not found for %s, which is too large to be an id, without calling the API',
+    async (id) => {
+      const detail = useAuctionDetail()
+
+      await detail.load(id)
+
+      expect(detail.state.value).toBe('not-found')
+      expect(fetchAuction).not.toHaveBeenCalled()
+    },
+  )
+
   it('retries the auction it last asked for', async () => {
     vi.mocked(fetchAuction).mockRejectedValueOnce(new TypeError('Network down'))
     vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ id: 7 }))
