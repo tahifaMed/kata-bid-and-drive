@@ -1,0 +1,29 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time. Never cancel a rollout that is already running.
+concurrency:
+  group: railway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@4.26.0
+
+      # --path-as-root makes each service directory the build root, so its Dockerfile and railway.toml are found
+      - name: Deploy backend
+        run: railway up backend --path-as-root --service backend --ci
+
+      - name: Deploy frontend
+        run: railway up frontend --path-as-root --service frontend --ci
