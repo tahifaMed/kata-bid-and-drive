@@ -40,7 +40,7 @@ class BidHistoryTests {
 	}
 
 	private static Bid bid(long id, Instant placedAt) {
-		return new Bid(id, new UserId(2), new Money(new BigDecimal("1000.00")), placedAt);
+		return new Bid(id, 5L, new UserId(2), new Money(new BigDecimal("1000.00")), placedAt);
 	}
 
 }

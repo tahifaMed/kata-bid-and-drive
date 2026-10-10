@@ -1,7 +1,7 @@
 # 007: Place a bid
 
 Branch: `feat/007-place-bid`  
-Status: validated
+Status: in-progress
 
 ## User story
 > As a buyer, I can place a bid on an open auction, so that I can compete for the car.
@@ -85,7 +85,7 @@ Given / When / Then. Each criterion maps to at least one test.
 - **API client:** the bidding feature calls the 003 API client and holds no Pinia store. `ApiError` gains an optional parsed ProblemDetail (`title`, `detail`, extra properties). When the error body is not JSON (a proxy 502, for example), `problem` is undefined and the status still drives handling.
 
 ## Slices
-1. **Domain** (criteria 2, 3, 4, 5).
+1. Done. **Domain** (criteria 2, 3, 4, 5).
    - `Auction` gains the stored components `leadingAmount` (`Money`, null with no bids), `leadingBidderId` (`UserId`, null with no bids), `bidCount` and `version`.
    - They are named apart from the 006 accessors, which keep their contract: `currentBid()` returns `startingPrice` with no bids (006 AC3), and `highestBidderId()` returns `Optional<UserId>`.
    - Update the call sites: `Auction.open`, `JpaAuctionRepository.toDomain` and the 006 tests.

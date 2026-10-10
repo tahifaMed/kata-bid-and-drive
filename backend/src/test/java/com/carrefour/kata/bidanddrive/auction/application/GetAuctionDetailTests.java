@@ -146,7 +146,7 @@ class GetAuctionDetailTests {
 	}
 
 	private static Bid bid(long id, UserId bidder, String amount, Instant placedAt) {
-		return new Bid(id, bidder, money(amount), placedAt);
+		return new Bid(id, 5L, bidder, money(amount), placedAt);
 	}
 
 	private static Money money(String amount) {
