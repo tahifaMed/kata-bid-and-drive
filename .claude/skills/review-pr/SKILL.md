@@ -2,7 +2,6 @@
 name: review-pr
 description: Review the current branch's diff against main with a fresh-context code-reviewer subagent, then report verified findings. Use after open-pr, or before asking a human to merge.
 argument-hint: "[PR number]"
-disable-model-invocation: true
 ---
 
 # Review a PR
