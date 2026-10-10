@@ -13,4 +13,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    // Dev only: forward API calls to the Spring Boot backend on its default port.
+    proxy: {
+      '/api': 'http://localhost:8080',
+    },
+  },
 })

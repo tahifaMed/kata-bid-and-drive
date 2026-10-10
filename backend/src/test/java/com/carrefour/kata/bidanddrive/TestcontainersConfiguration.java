@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
  * Spring Boot wires the container's URL and credentials into the datasource.
  */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
 	static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("postgres:18.6");
 
