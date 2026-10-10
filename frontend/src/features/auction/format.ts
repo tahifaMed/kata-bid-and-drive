@@ -1,10 +1,12 @@
 const usd = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
-  maximumFractionDigits: 0,
+  currencyDisplay: 'code',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 })
 
-/** Whole-dollar display for bids, for example $81,500. */
+/** Two decimals and a fixed currency code, for example USD 81,500.00. */
 export function formatCurrency(amount: number): string {
   return usd.format(amount)
 }
