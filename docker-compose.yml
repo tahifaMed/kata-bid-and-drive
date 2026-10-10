@@ -8,7 +8,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      # Postgres 18+ expects the mount at /var/lib/postgresql (not .../data)
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U bidanddrive -d bidanddrive"]
       interval: 5s
