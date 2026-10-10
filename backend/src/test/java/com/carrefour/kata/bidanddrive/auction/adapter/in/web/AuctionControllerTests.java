@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +46,32 @@ class AuctionControllerTests {
 				.andExpect(jsonPath("$.bids").isEmpty())
 				.andExpect(jsonPath("$._links.self.href").value(org.hamcrest.Matchers.matchesPattern(".*/api/auctions/\\d+")))
 				.andExpect(jsonPath("$._links.place-bid.href").value(org.hamcrest.Matchers.endsWith("/bids")));
+	}
+
+	@Test
+	void a_created_auction_can_be_read_back_without_an_identity() throws Exception {
+		MvcResult created = mockMvc.perform(post("/api/auctions").header(HEADER, "1")
+						.contentType(MediaType.APPLICATION_JSON).content(validBody(endsIn(Duration.ofDays(2)))))
+				.andExpect(status().isCreated())
+				.andReturn();
+		String location = created.getResponse().getHeader("Location");
+
+		mockMvc.perform(get(location))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("OPEN"))
+				.andExpect(jsonPath("$.seller.displayName").value("Alice"))
+				.andExpect(jsonPath("$.currentBid").value("12000.00"))
+				.andExpect(jsonPath("$.bidCount").value(0))
+				.andExpect(jsonPath("$.bids").isEmpty())
+				.andExpect(jsonPath("$._links.self.href").value(location))
+				.andExpect(jsonPath("$._links.place-bid.href").value(location + "/bids"));
+	}
+
+	@Test
+	void reading_an_unknown_auction_is_a_404_problem() throws Exception {
+		mockMvc.perform(get("/api/auctions/" + Long.MAX_VALUE))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Auction not found"));
 	}
 
 	@Test

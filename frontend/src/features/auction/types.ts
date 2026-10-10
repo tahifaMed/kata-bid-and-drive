@@ -40,6 +40,14 @@ export interface CarDetails {
   imageUrl: string | null
 }
 
+/** One bid in the public history, newest first. The bidder name is masked, for example "B***" (spec 006). */
+export interface AuctionBid {
+  amount: string
+  placedAt: string
+  bidderName: string
+}
+
+/** The auction detail (spec 006). The create response has the same shape (ADR 0010). */
 export interface AuctionResponse {
   id: number
   status: 'OPEN'
@@ -52,6 +60,7 @@ export interface AuctionResponse {
   bidCount: number
   highestBidderId: number | null
   endsAt: string
-  bids: never[]
+  bids: AuctionBid[]
+  /** `place-bid` is present only while the auction takes bids. */
   _links: Record<string, { href: string }>
 }

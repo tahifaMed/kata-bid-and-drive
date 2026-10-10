@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchOpenAuctions } from './api'
+import { fetchAuction, fetchOpenAuctions } from './api'
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -16,5 +16,13 @@ describe('fetchOpenAuctions', () => {
     await fetchOpenAuctions(2)
 
     expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe('/api/auctions?page=2&size=20')
+  })
+})
+
+describe('fetchAuction', () => {
+  it('requests the auction detail by id', async () => {
+    await fetchAuction(5)
+
+    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe('/api/auctions/5')
   })
 })

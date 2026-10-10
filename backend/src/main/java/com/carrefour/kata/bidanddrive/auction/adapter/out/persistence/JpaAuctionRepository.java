@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 class JpaAuctionRepository implements AuctionRepository {
@@ -46,8 +47,9 @@ class JpaAuctionRepository implements AuctionRepository {
 		return new AuctionPage<>(items, query.number(), query.size(), slice.hasNext());
 	}
 
-	Auction findById(long id) {
-		return repository.findById(id).map(this::toDomain).orElseThrow();
+	@Override
+	public Optional<Auction> findById(long id) {
+		return repository.findWithCarById(id).map(this::toDomain);
 	}
 
 	private Auction toDomain(AuctionEntity entity) {

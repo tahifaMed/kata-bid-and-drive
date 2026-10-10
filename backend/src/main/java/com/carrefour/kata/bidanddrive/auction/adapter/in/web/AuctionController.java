@@ -1,8 +1,10 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.application.AuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.AuctionPage;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuctionCommand;
+import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
 import com.carrefour.kata.bidanddrive.auction.application.PageQuery;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
@@ -17,6 +19,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,12 +40,21 @@ class AuctionController {
 
 	private final CreateAuction createAuction;
 	private final ListOpenAuctions listOpenAuctions;
+	private final GetAuctionDetail getAuctionDetail;
 	private final UserDirectory users;
 
-	AuctionController(CreateAuction createAuction, ListOpenAuctions listOpenAuctions, UserDirectory users) {
+	AuctionController(CreateAuction createAuction, ListOpenAuctions listOpenAuctions,
+			GetAuctionDetail getAuctionDetail, UserDirectory users) {
 		this.createAuction = createAuction;
 		this.listOpenAuctions = listOpenAuctions;
+		this.getAuctionDetail = getAuctionDetail;
 		this.users = users;
+	}
+
+	/** Public, like the list. A non-numeric id is a 400 through the type mismatch handler. */
+	@GetMapping("/{id}")
+	AuctionResponse detail(@PathVariable long id) {
+		return AuctionResponse.of(getAuctionDetail.execute(id), auctionUri(id));
 	}
 
 	/** Public: no identity is needed to browse. Paging bounds are checked before the use case runs. */
@@ -82,13 +94,12 @@ class AuctionController {
 		String sellerName = users.findById(sellerId)
 				.map(User::displayName)
 				.orElseThrow(() -> new IllegalStateException("seller " + sellerId + " vanished mid-request"));
-		URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
-				.path("/api/auctions/{id}")
-				.buildAndExpand(auction.id())
-				.toUri();
+		URI location = auctionUri(auction.id());
+		// A new auction has no bids and ends inside the window, so it is biddable (ADR 0010).
+		AuctionDetail detail = new AuctionDetail(auction, sellerName, List.of(), true);
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.location(location)
-				.body(AuctionResponse.of(auction, sellerName, location));
+				.body(AuctionResponse.of(detail, location));
 	}
 
 	private static URI pageUri(int page, int size) {

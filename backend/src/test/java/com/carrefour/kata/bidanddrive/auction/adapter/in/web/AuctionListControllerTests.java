@@ -2,6 +2,7 @@ package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
 import com.carrefour.kata.bidanddrive.auction.application.AuctionPage;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
+import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
 import com.carrefour.kata.bidanddrive.auction.application.PageQuery;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
@@ -45,6 +46,9 @@ class AuctionListControllerTests {
 
 	@MockitoBean
 	private CreateAuction createAuction;
+
+	@MockitoBean
+	private GetAuctionDetail getAuctionDetail;
 
 	@MockitoBean
 	private UserDirectory users;

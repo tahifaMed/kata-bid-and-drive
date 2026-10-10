@@ -1,15 +1,19 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.application.AuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
+import com.carrefour.kata.bidanddrive.auction.domain.Money;
+import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** The 006 detail shape, as a new auction shows it (ADR 0010). */
+/** The 006 detail shape. The 004 create response uses it too (ADR 0010). */
 public record AuctionResponse(
 		Long id,
 		AuctionStatus status,
@@ -25,24 +29,31 @@ public record AuctionResponse(
 		List<BidResponse> bids,
 		Map<String, Link> _links) {
 
-	public static AuctionResponse of(Auction auction, String sellerName, URI self) {
-		String startingPrice = auction.startingPrice().amount().toPlainString();
+	public static AuctionResponse of(AuctionDetail detail, URI self) {
+		Auction auction = detail.auction();
+		Map<String, Link> links = new LinkedHashMap<>();
+		links.put("self", new Link(self.toString()));
+		if (detail.biddable()) {
+			links.put("place-bid", new Link(self + "/bids"));
+		}
 		return new AuctionResponse(
 				auction.id(),
 				auction.status(),
 				CarResponse.from(auction.car()),
-				new SellerResponse(sellerName),
-				startingPrice,
-				auction.minIncrement().amount().toPlainString(),
-				startingPrice,
-				startingPrice,
-				0,
-				null,
+				new SellerResponse(detail.sellerName()),
+				text(auction.startingPrice()),
+				text(auction.minIncrement()),
+				text(auction.currentBid()),
+				text(auction.minNextBid()),
+				auction.bidCount(),
+				auction.highestBidderId().map(UserId::value).orElse(null),
 				auction.endsAt(),
-				List.of(),
-				Map.of(
-						"self", new Link(self.toString()),
-						"place-bid", new Link(self + "/bids")));
+				detail.bids().stream().map(BidResponse::from).toList(),
+				links);
+	}
+
+	private static String text(Money money) {
+		return money.amount().toPlainString();
 	}
 
 	public record CarResponse(
@@ -61,8 +72,13 @@ public record AuctionResponse(
 
 	public record SellerResponse(String displayName) {}
 
-	/** Bid history entries. A new auction has none; spec 006 fills this in. */
-	public record BidResponse(String amount, Instant placedAt, String bidderName) {}
+	/** One entry of the bid history. The bidder is shown only by a masked name (spec 006). */
+	public record BidResponse(String amount, Instant placedAt, String bidderName) {
+
+		static BidResponse from(AuctionDetail.HistoryEntry entry) {
+			return new BidResponse(text(entry.amount()), entry.placedAt(), entry.bidderName());
+		}
+	}
 
 	public record Link(String href) {}
 

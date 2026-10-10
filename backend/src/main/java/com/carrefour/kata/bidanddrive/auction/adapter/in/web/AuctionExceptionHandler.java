@@ -1,6 +1,9 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.application.AuctionNotFoundException;
 import com.carrefour.kata.bidanddrive.auction.domain.InvalidAuctionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,6 +18,8 @@ import java.util.Map;
 
 @RestControllerAdvice(assignableTypes = AuctionController.class)
 class AuctionExceptionHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(AuctionExceptionHandler.class);
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	ProblemDetail handleInvalidFields(MethodArgumentNotValidException exception) {
@@ -35,7 +40,24 @@ class AuctionExceptionHandler {
 		return invalid(errors);
 	}
 
-	/** A paging value that is not a whole number, such as {@code page=abc}. */
+	@ExceptionHandler(AuctionNotFoundException.class)
+	ProblemDetail handleNotFound(AuctionNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setTitle("Auction not found");
+		return problem;
+	}
+
+	/** Broken data, such as a seller missing from the user directory. The cause stays in the logs. */
+	@ExceptionHandler(IllegalStateException.class)
+	ProblemDetail handleBrokenData(IllegalStateException exception) {
+		log.error("Auction request failed on inconsistent data", exception);
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+				"The request could not be completed");
+		problem.setTitle("Internal error");
+		return problem;
+	}
+
+	/** A paging value or an auction id that is not a whole number, such as {@code page=abc}. */
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	ProblemDetail handleNotANumber(MethodArgumentTypeMismatchException exception) {
 		return invalid(List.of(Map.of("field", exception.getName(), "message", "must be a whole number")));
