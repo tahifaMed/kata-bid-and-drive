@@ -27,4 +27,14 @@ describe('AuctionForm when the request fails', () => {
     expect((screen.getByLabelText('Make') as HTMLInputElement).value).toBe('Volkswagen')
     expect(screen.getByRole('button', { name: 'Create auction' }).hasAttribute('disabled')).toBe(false)
   })
+
+  it('shows the same retry message when the server answers with an error status', async () => {
+    vi.stubGlobal('fetch', () => Promise.resolve(new Response('{"title":"Invalid auction"}', { status: 400 })))
+    render(AuctionForm)
+
+    await fillValidAuctionForm()
+    await fireEvent.click(screen.getByRole('button', { name: 'Create auction' }))
+
+    expect(await screen.findByText('Could not create the auction. Try again.')).toBeTruthy()
+  })
 })

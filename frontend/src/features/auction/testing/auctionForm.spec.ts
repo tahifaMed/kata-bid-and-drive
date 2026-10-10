@@ -46,22 +46,23 @@ describe('validateAuctionForm', () => {
     expect(validateAuctionForm(valid({ startingPrice: price }), NOW).startingPrice).toBeUndefined()
   })
 
-  it('rejects an end time less than one hour away', () => {
-    expect(validateAuctionForm(valid({ endsAt: '2026-10-10T12:59' }), NOW).endsAt).toBeDefined()
+  it('requires an end time and leaves the window to the server', () => {
+    expect(validateAuctionForm(valid({ endsAt: '' }), NOW).endsAt).toBeDefined()
+    expect(validateAuctionForm(valid({ endsAt: '2020-01-01T10:00' }), NOW).endsAt).toBeUndefined()
   })
 
-  it('accepts an end time exactly one hour away', () => {
-    expect(validateAuctionForm(valid({ endsAt: '2026-10-10T13:00' }), NOW).endsAt).toBeUndefined()
-  })
+  it('checks the year against the UTC calendar year', () => {
+    const lateDecember = new Date('2026-12-31T23:30:00Z')
 
-  it('rejects an end time more than 30 days away', () => {
-    expect(validateAuctionForm(valid({ endsAt: '2026-11-10T12:01' }), NOW).endsAt).toBeDefined()
+    expect(validateAuctionForm(valid({ year: '2027' }), lateDecember).year).toBeUndefined()
+    expect(validateAuctionForm(valid({ year: '2028' }), lateDecember).year).toBeDefined()
   })
 
   it('accepts only http and https photo links', () => {
     expect(validateAuctionForm(valid({ imageUrl: 'https://example.com/car.jpg' }), NOW).imageUrl).toBeUndefined()
     expect(validateAuctionForm(valid({ imageUrl: 'ftp://example.com/car.jpg' }), NOW).imageUrl).toBeDefined()
     expect(validateAuctionForm(valid({ imageUrl: 'not a link' }), NOW).imageUrl).toBeDefined()
+    expect(validateAuctionForm(valid({ imageUrl: 'https://example.com/my photo.jpg' }), NOW).imageUrl).toBeDefined()
   })
 
   it('requires make and limits it to 60 characters', () => {

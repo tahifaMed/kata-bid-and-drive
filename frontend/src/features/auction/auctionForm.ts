@@ -28,8 +28,6 @@ export const EMPTY_AUCTION_FORM: AuctionFormValues = {
 }
 
 const FIRST_YEAR = 1886
-const HOUR_MS = 60 * 60 * 1000
-const DAY_MS = 24 * HOUR_MS
 const MAX_TEXT = 60
 const MAX_DESCRIPTION = 2000
 const MAX_URL = 2048
@@ -46,7 +44,8 @@ export function validateAuctionForm(values: AuctionFormValues, now: Date): Aucti
     else if (text.length > MAX_TEXT) errors[field] = `Use at most ${MAX_TEXT} characters.`
   }
 
-  const maxYear = now.getFullYear() + 1
+  // UTC, to match the server. A browser in another zone can be on a different calendar year.
+  const maxYear = now.getUTCFullYear() + 1
   if (!/^\d+$/.test(values.year)) {
     errors.year = `Enter a year from ${FIRST_YEAR} to ${maxYear}.`
   } else if (Number(values.year) < FIRST_YEAR || Number(values.year) > maxYear) {
@@ -69,15 +68,10 @@ export function validateAuctionForm(values: AuctionFormValues, now: Date): Aucti
     }
   }
 
+  // The end-time window needs the server clock. The browser clock can be wrong, so the server decides
+  // (ADR 0008) and a rejected end time comes back as the generic error on the form.
   if (values.endsAt === '') {
     errors.endsAt = 'Choose when the auction ends.'
-  } else {
-    const endsAt = new Date(values.endsAt).getTime()
-    if (Number.isNaN(endsAt) || endsAt < now.getTime() + HOUR_MS) {
-      errors.endsAt = 'The auction must end at least 1 hour from now.'
-    } else if (endsAt > now.getTime() + 30 * DAY_MS) {
-      errors.endsAt = 'The auction must end within 30 days from now.'
-    }
   }
 
   return errors
@@ -103,7 +97,8 @@ export function toCreateAuctionRequest(values: AuctionFormValues): CreateAuction
 }
 
 function isHttpUrl(value: string): boolean {
-  if (value.length > MAX_URL) return false
+  // The server rejects whitespace, although URL() would accept and encode it.
+  if (value.length > MAX_URL || /\s/.test(value)) return false
   try {
     const url = new URL(value)
     return url.protocol === 'http:' || url.protocol === 'https:'
