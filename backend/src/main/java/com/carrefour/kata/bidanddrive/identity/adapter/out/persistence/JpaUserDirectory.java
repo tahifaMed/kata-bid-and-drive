@@ -4,6 +4,7 @@ import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
 import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,6 +21,12 @@ class JpaUserDirectory implements UserDirectory {
 		return repository.findAllByOrderByIdAsc().stream()
 				.map(entity -> new User(new UserId(entity.getId()), entity.getDisplayName()))
 				.toList();
+	}
+
+	@Override
+	public Optional<User> findById(UserId id) {
+		return repository.findById(id.value())
+				.map(entity -> new User(new UserId(entity.getId()), entity.getDisplayName()));
 	}
 
 }

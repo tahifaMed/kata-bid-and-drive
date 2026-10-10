@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.carrefour.kata.bidanddrive.identity.application.ListUsers;
+import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
 import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import java.util.List;
@@ -24,6 +25,9 @@ class UserControllerTests {
 
 	@MockitoBean
 	private ListUsers listUsers;
+
+	@MockitoBean
+	private UserDirectory userDirectory;
 
 	@Test
 	void lists_users_as_id_and_display_name_without_a_user_header() throws Exception {
