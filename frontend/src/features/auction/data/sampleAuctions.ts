@@ -3,12 +3,13 @@ import type { AuctionListing } from '../types'
 /**
  * Static sample listings for the /auctions page.
  * Photos are from Wikimedia Commons under open licences. Credits are shown on the page.
+ * Mileage, bids and locations are illustrative values, not real listings.
  */
 export const sampleAuctions: AuctionListing[] = [
   {
     id: 'porsche-911',
     title: '2013 Porsche 911 Carrera 4S',
-    specs: '15k miles, 7-speed manual, twin-turbo flat-six',
+    specs: '15k miles, 7-speed manual, naturally aspirated 3.8-litre flat-six',
     location: 'Carmichael, CA',
     timeLeft: '2 days',
     currentBid: 81500,
@@ -24,7 +25,7 @@ export const sampleAuctions: AuctionListing[] = [
   {
     id: 'land-rover-defender',
     title: '2016 Land Rover Defender 110',
-    specs: 'Supercharged V8, all-wheel drive, one owner, mostly unmodified',
+    specs: '110 station wagon, four-wheel drive',
     location: 'Forsyth, GA',
     timeLeft: '2 days',
     currentBid: 51000,
@@ -40,7 +41,7 @@ export const sampleAuctions: AuctionListing[] = [
   {
     id: 'subaru-impreza',
     title: '2004 Subaru Impreza WRX STI',
-    specs: '1 owner, 62k miles, 6-speed manual, dyno-verified 389 whp',
+    specs: 'Turbocharged 2.5-litre flat-four, all-wheel drive, 6-speed manual',
     location: 'Farmingville, NY',
     timeLeft: '2 days',
     currentBid: 20000,
@@ -56,13 +57,13 @@ export const sampleAuctions: AuctionListing[] = [
   {
     id: 'zimmer-golden-spirit',
     title: '1986 Zimmer Golden Spirit',
-    specs: 'Rare replica coupe on a Mustang-derived chassis, 5.0L V8',
+    specs: 'Replica coupe on a Mustang-derived chassis',
     location: 'East Petersburg, PA',
     timeLeft: '2 days',
     currentBid: 8324,
     noReserve: false,
     image: '/images/auctions/zimmer-golden-spirit.jpg',
-    imageAlt: '1986 Zimmer Golden Spirit replica coupe, front three-quarter view',
+    imageAlt: 'Zimmer Golden Spirit replica coupe, front three-quarter view',
     credit: {
       author: 'Pujanak',
       license: 'Public domain',
@@ -72,7 +73,7 @@ export const sampleAuctions: AuctionListing[] = [
   {
     id: 'tesla-model-x',
     title: '2016 Tesla Model X 100D',
-    specs: '49k miles, dual-motor AWD, full self-driving capability',
+    specs: 'Dual-motor all-wheel drive, electric',
     location: 'Santa Ana, CA',
     timeLeft: '2 days',
     currentBid: 28250,
@@ -87,14 +88,14 @@ export const sampleAuctions: AuctionListing[] = [
   },
   {
     id: 'honda-acty',
-    title: '1990 Honda Acty Truck',
-    specs: '5-speed manual, 4WD, 3-inch lift kit, JDM kei truck',
+    title: '2018 Honda Acty Truck (HA9)',
+    specs: 'Kei truck, four-wheel drive',
     location: 'Saint Cloud, FL',
     timeLeft: '2 days',
     currentBid: 7200,
     noReserve: true,
     image: '/images/auctions/honda-acty.jpg',
-    imageAlt: '1990 Honda Acty kei truck, front three-quarter view',
+    imageAlt: 'Honda Acty HA9 kei truck, front three-quarter view',
     credit: {
       author: 'TTTNIS',
       license: 'CC0',
@@ -103,14 +104,14 @@ export const sampleAuctions: AuctionListing[] = [
   },
   {
     id: 'audi-s4-avant',
-    title: '2018 Audi S4 Avant',
-    specs: '3.0-litre supercharged V6, quattro AWD, highly equipped',
+    title: 'Audi S4 Avant (B9 generation)',
+    specs: '3.0-litre supercharged V6, quattro all-wheel drive',
     location: 'Littleton, CO',
     timeLeft: '2 days',
     currentBid: 7500,
     noReserve: false,
     image: '/images/auctions/audi-s4-avant.jpg',
-    imageAlt: '2018 Audi S4 Avant estate, front three-quarter view',
+    imageAlt: 'Audi S4 Avant estate, front three-quarter view',
     credit: {
       author: 'Alexander Migl',
       license: 'CC BY-SA 4.0',
@@ -119,14 +120,14 @@ export const sampleAuctions: AuctionListing[] = [
   },
   {
     id: 'bmw-m4-coupe',
-    title: '2019 BMW M4 Coupe',
-    specs: '1 owner, Le Mans Blue, executive package, California-owned',
+    title: '2021 BMW M4 Coupe',
+    specs: 'Twin-turbo inline-six, rear-wheel drive',
     location: 'La Habra, CA',
     timeLeft: '2 days',
     currentBid: 18500,
     noReserve: false,
     image: '/images/auctions/bmw-m4-coupe.jpg',
-    imageAlt: '2019 BMW M4 coupe, front three-quarter view',
+    imageAlt: 'Grey BMW M4 coupe with red accents, front three-quarter view',
     credit: {
       author: 'Alexander-93',
       license: 'CC BY-SA 4.0',
