@@ -17,7 +17,7 @@ public record Auction(
 		Instant endsAt,
 		AuctionStatus status) {
 
-	static final int FIRST_YEAR = 1886;
+	public static final int FIRST_YEAR = 1886;
 
 	public static Auction open(
 			UserId sellerId,
