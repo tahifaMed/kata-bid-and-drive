@@ -7,7 +7,7 @@ Status: Accepted
 
 ## Decision
 - The 201 body has the same field names as the 006 detail (`car`, `seller {displayName}`, `startingPrice`, `currentBid`, `minNextBid`, `bidCount`, `highestBidderId`, `bids`, `endsAt`, `status`, `_links`). A new auction has `bidCount: 0`, `bids: []` and `highestBidderId: null`.
-- The `place-bid` link is included, because an OPEN auction always has it (006).
+- The `place-bid` link is included, because a biddable auction (`OPEN` and `endsAt` in the future) always has it (006). A new auction is always biddable.
 - Later specs may add fields to the body but not remove or rename these.
 
 ## Consequences
