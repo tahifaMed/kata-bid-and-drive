@@ -194,6 +194,16 @@ class BidControllerTests {
 		verifyNoInteractions(getBid);
 	}
 
+	@Test
+	void reading_a_bid_as_an_unknown_user_is_unauthorized() throws Exception {
+		given(users.findById(new UserId(999))).willReturn(Optional.empty());
+
+		mockMvc.perform(get("/api/auctions/5/bids/12").header("X-User-Id", "999"))
+				.andExpect(status().isUnauthorized());
+
+		verifyNoInteractions(getBid);
+	}
+
 	private ResultActions rejectWith(RuntimeException rejection) throws Exception {
 		given(placeBid.execute(anyLong(), any(), any())).willThrow(rejection);
 		return bid("{\"amount\": \"1050.00\"}");
