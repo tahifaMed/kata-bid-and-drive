@@ -63,6 +63,32 @@ class AuctionControllerTests {
 	}
 
 	@Test
+	void missing_mileage_blank_model_and_money_above_the_maximum_are_listed() throws Exception {
+		String body = """
+				{"car": {"make": "VW", "model": " ", "year": 2020},
+				 "startingPrice": "10000000000.00", "minIncrement": "100.00", "endsAt": "%s"}
+				""".formatted(endsIn(Duration.ofDays(2)));
+
+		mockMvc.perform(post("/api/auctions").header(HEADER, "1")
+						.contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errors[*].field").value(org.hamcrest.Matchers.containsInAnyOrder(
+						"car.model", "car.mileageKm", "startingPrice")));
+	}
+
+	@Test
+	void end_time_as_an_epoch_number_is_rejected() throws Exception {
+		String body = """
+				{"car": {"make": "VW", "model": "Golf", "year": 2020, "mileageKm": 0},
+				 "startingPrice": "12000.00", "minIncrement": "100.00", "endsAt": %d}
+				""".formatted(Instant.now().plus(Duration.ofDays(2)).getEpochSecond());
+
+		mockMvc.perform(post("/api/auctions").header(HEADER, "1")
+						.contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void money_as_a_json_number_is_rejected() throws Exception {
 		String body = """
 				{"car": {"make": "VW", "model": "Golf", "year": 2020, "mileageKm": 0},

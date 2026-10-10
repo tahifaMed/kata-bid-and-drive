@@ -19,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/api/auctions")
@@ -41,7 +42,7 @@ class AuctionController {
 				toCar(request.car()),
 				new BigDecimal(request.startingPrice()),
 				new BigDecimal(request.minIncrement()),
-				request.endsAt()));
+				OffsetDateTime.parse(request.endsAt()).toInstant()));
 
 		// The @CurrentUser resolver has already confirmed this user exists.
 		String sellerName = users.findById(sellerId)

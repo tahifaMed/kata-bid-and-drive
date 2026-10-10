@@ -36,6 +36,7 @@ class AuctionPersistenceTests {
 
 	@Test
 	void saving_an_auction_stores_one_auction_row_and_its_car() {
+		int auctionsBefore = countAuctions();
 		Instant now = Instant.now();
 		Car car = new Car("Volkswagen", "Golf", 2020, 42000, "Blue, one owner", "https://example.com/golf.jpg");
 		Auction auction = Auction.open(new UserId(1), car, new BigDecimal("12000.00"), new BigDecimal("100.00"),
@@ -50,6 +51,7 @@ class AuctionPersistenceTests {
 		assertThat(found.startingPrice().amount()).isEqualByComparingTo("12000.00");
 		assertThat(found.minIncrement().amount()).isEqualByComparingTo("100.00");
 		assertThat(found.endsAt()).isEqualTo(auction.endsAt());
+		assertThat(countAuctions()).isEqualTo(auctionsBefore + 1);
 		assertThat(countCarsFor(saved.id())).isEqualTo(1);
 	}
 
@@ -64,6 +66,10 @@ class AuctionPersistenceTests {
 				"INSERT INTO car (auction_id, make, model, year, mileage_km) VALUES (?, 'Renault', 'Clio', 2018, 0)",
 				saved.id()))
 				.isInstanceOf(DataIntegrityViolationException.class);
+	}
+
+	private int countAuctions() {
+		return jdbc.queryForObject("SELECT count(*) FROM auction", Integer.class);
 	}
 
 	private int countCarsFor(long auctionId) {

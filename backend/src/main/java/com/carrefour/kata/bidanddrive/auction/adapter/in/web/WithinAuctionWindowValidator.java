@@ -6,10 +6,12 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 
+/** Accepts only an ISO-8601 time with an offset (no offset is invalid), inside the window. */
 @Component
-class WithinAuctionWindowValidator implements ConstraintValidator<WithinAuctionWindow, Instant> {
+class WithinAuctionWindowValidator implements ConstraintValidator<WithinAuctionWindow, String> {
 
 	private final AuctionWindow window;
 	private final Clock clock;
@@ -20,8 +22,15 @@ class WithinAuctionWindowValidator implements ConstraintValidator<WithinAuctionW
 	}
 
 	@Override
-	public boolean isValid(Instant endsAt, ConstraintValidatorContext context) {
-		return endsAt == null || window.contains(endsAt, clock.instant());
+	public boolean isValid(String endsAt, ConstraintValidatorContext context) {
+		if (endsAt == null) {
+			return true;
+		}
+		try {
+			return window.contains(OffsetDateTime.parse(endsAt).toInstant(), clock.instant());
+		} catch (DateTimeParseException invalid) {
+			return false;
+		}
 	}
 
 }
