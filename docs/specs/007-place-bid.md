@@ -108,7 +108,7 @@ Given / When / Then. Each criterion maps to at least one test.
 5. Done. **Backend concurrency** (criteria 7, 9 parallel).
    - Version-conflict mapping to 409.
    - 20-bidder parallel test and the parallel double post, against a real server and database, not transactional.
-6. **Frontend** (criteria 10, 11).
+6. Done. **Frontend** (criteria 10, 11).
    - `ApiError` with the ProblemDetail, `BidPanel`, `useAuctionDetail.refresh()`, and wiring into the detail page in place of the 006 slot.
    - Vitest component and view tests.
 

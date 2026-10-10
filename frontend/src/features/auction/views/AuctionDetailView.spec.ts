@@ -3,18 +3,23 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../api/client'
+import { placeBid } from '../../bidding/api'
 import { fetchAuction } from '../api'
 import { auctionDetail } from '../testing/auctionDetailFixture'
 import AuctionDetailView from './AuctionDetailView.vue'
 
 vi.mock('../api', () => ({ fetchAuction: vi.fn<typeof fetchAuction>() }))
+vi.mock('../../bidding/api', () => ({ placeBid: vi.fn<typeof placeBid>() }))
 
 afterEach(() => cleanup())
 beforeEach(() => {
   vi.mocked(fetchAuction).mockReset()
+  vi.mocked(placeBid).mockReset()
+  localStorage.clear()
 })
 
-async function renderAt(path: string) {
+async function renderAt(path: string, userId = 1) {
+  localStorage.setItem('bidanddrive.currentUserId', String(userId))
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -56,14 +61,43 @@ describe('AuctionDetailView', () => {
     )
   })
 
-  it('shows the bid panel slot while the auction takes bids', async () => {
+  it('shows the bid panel while the auction takes bids', async () => {
     vi.mocked(fetchAuction).mockResolvedValue(auctionDetail())
-    await renderAt('/auctions/5')
+    await renderAt('/auctions/5', 2)
 
     expect(await screen.findByRole('region', { name: 'Place a bid' })).toBeTruthy()
+    expect(screen.getByLabelText('Your bid (USD)')).toBeTruthy()
   })
 
-  it('hides the bid panel slot when the auction has no place-bid link', async () => {
+  it('refreshes the auction after a bid, keeping the page on screen', async () => {
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail())
+    let answer: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+    vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+    vi.mocked(placeBid).mockResolvedValue({
+      id: 12,
+      auctionId: 5,
+      bidderId: 2,
+      amount: '12000.00',
+      placedAt: '2026-10-11T10:00:00Z',
+      _links: {},
+    })
+    await renderAt('/auctions/5', 2)
+
+    await fireEvent.update(await screen.findByLabelText('Your bid (USD)'), '12000.00')
+    await fireEvent.click(screen.getByRole('button', { name: 'Place bid' }))
+    await screen.findByText('Your bid of USD 12,000.00 was placed.')
+
+    expect(fetchAuction).toHaveBeenCalledTimes(2)
+    expect(screen.queryByText('Loading auction…')).toBeNull()
+    expect(screen.getByRole('region', { name: 'Place a bid' })).toBeTruthy()
+
+    answer(auctionDetail({ currentBid: '12000.00', minNextBid: '12100.00', bidCount: 1, highestBidderId: 2 }))
+
+    expect(await screen.findByText('You are the highest bidder.')).toBeTruthy()
+    expect(screen.getByText('USD 12,100.00')).toBeTruthy()
+  })
+
+  it('hides the bid panel when the auction has no place-bid link', async () => {
     vi.mocked(fetchAuction).mockResolvedValue(
       auctionDetail({ _links: { self: { href: 'http://localhost/api/auctions/5' } } }),
     )
