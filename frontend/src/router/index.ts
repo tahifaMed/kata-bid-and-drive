@@ -20,6 +20,12 @@ const router = createRouter({
       component: () => import('../features/auction/views/CreateAuctionView.vue'),
     },
     {
+      // Static paths such as /auctions/new rank above this one. The view checks the id.
+      path: '/auctions/:id',
+      name: 'auction-detail',
+      component: () => import('../features/auction/views/AuctionDetailView.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       // route level code-splitting

@@ -1,7 +1,7 @@
 # 006: Auction detail
 
 Branch: `feat/006-auction-detail`  
-Status: validated
+Status: implemented, pending review
 
 ## Where we are
 - Merged: 004 (create auction, `AuctionResponse` is the detail shape per ADR 0010) and 005 (list open auctions, card links to `/auctions/:id`).
@@ -56,7 +56,7 @@ Implementation shape:
 ## Slices
 1. Done. Backend domain and application: `Bid`, `BidHistory`, `BidderName`, `Auction` bid getters and biddable rule, `GetAuctionDetail`, `AuctionNotFoundException`, and `AuctionRepository.findById` with a Testcontainers test (the port change needs the adapter). Covers criteria: 3, 4, 8, 9, 10 (domain part).
 2. Done. Backend web: the empty `BidRepository` adapter, `GET /api/auctions/{id}`, 404 and 400 ProblemDetail, public access, conditional `place-bid` link, `AuctionResponse` built from `AuctionDetail`. Covers criteria: 1, 2, 3, 7, 8.
-3. Frontend: route, `AuctionDetailView`, components, loading, not-found and error states, time left, bid panel slot. Covers criteria: 5, 6, 8.
+3. Done. Frontend: route, `AuctionDetailView`, components, loading, not-found and error states, time left, bid panel slot. Covers criteria: 5, 6, 8.
 
 ## Decisions
 - The detail returns `highestBidderId` so that the live page can detect outbidding without another call. It is an id, not a name.
