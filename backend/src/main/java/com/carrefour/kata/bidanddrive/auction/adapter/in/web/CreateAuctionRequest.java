@@ -1,5 +1,6 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,8 +30,8 @@ public record CreateAuctionRequest(
 	/** Positive, at most ten integer digits, at most two decimals (trailing zeros are allowed). */
 	static final class PriceValidation {
 
-		static final String PATTERN = "^(?!0+(\\.0+)?$)\\d{1,10}(\\.\\d{1,2}0*)?$";
-		static final String MESSAGE = "must be a positive amount with at most two decimals";
+		static final String PATTERN = Money.TEXT_PATTERN;
+		static final String MESSAGE = Money.TEXT_RULE;
 
 		private PriceValidation() {
 		}

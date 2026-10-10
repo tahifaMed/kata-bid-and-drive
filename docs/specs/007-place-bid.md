@@ -98,7 +98,7 @@ Given / When / Then. Each criterion maps to at least one test.
    - `AuctionEntity` owns `@Version`. `AuctionRepository.recordBid` is added. A JPA bid adapter replaces `NoStoredBids`, with `findNewest` and `findById(auctionId, bidId)`.
    - The Flyway version check in `PostgresConfigurationTests` moves to 4.
    - Testcontainers tests cover a round trip, and a stale version failing with an optimistic-lock exception.
-3. **Backend API, place bid** (criteria 1 except the list, 2–6, 8 for `POST`, 9 sequential).
+3. Done. **Backend API, place bid** (criteria 1 except the list, 2–6, 8 for `POST`, 9 sequential).
    - `PlaceBid` use case in one transaction.
    - `POST` controller with `RawAmount`, HAL `_links` and `Location`.
    - `BidExceptionHandler`: 400 "Invalid bid", 401, 403, 404, 409, and 422 with `minimumBid`.
