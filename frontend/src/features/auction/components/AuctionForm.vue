@@ -8,22 +8,32 @@ const emit = defineEmits<{ created: [auction: AuctionResponse] }>()
 const form = useCreateAuctionForm()
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-const carFields: { name: AuctionFormField; label: string; type: string; hint?: string }[] = [
-  { name: 'make', label: 'Make', type: 'text' },
-  { name: 'model', label: 'Model', type: 'text' },
-  { name: 'year', label: 'Year', type: 'number' },
-  { name: 'mileageKm', label: 'Mileage (km)', type: 'number' },
-  { name: 'imageUrl', label: 'Photo link (optional)', type: 'url', hint: 'Starts with https://' },
+interface FieldConfig {
+  name: AuctionFormField
+  label: string
+  hint: string
+  type: string
+  wide?: boolean
+}
+
+const carFields: FieldConfig[] = [
+  { name: 'make', label: 'Car make', hint: 'For example Volkswagen', type: 'text' },
+  { name: 'model', label: 'Car model', hint: 'For example Golf', type: 'text' },
+  { name: 'year', label: 'Year of manufacture', hint: 'From 1886 to next year', type: 'number' },
+  { name: 'mileageKm', label: 'Mileage (km)', hint: 'Kilometres driven so far', type: 'number' },
+  { name: 'imageUrl', label: 'Photo link (optional)', hint: 'Must start with https://', type: 'url', wide: true },
+  { name: 'description', label: 'Description (optional)', hint: 'Condition, history, extras', type: 'textarea', wide: true },
 ]
 
-const auctionFields: { name: AuctionFormField; label: string; type: string; hint?: string }[] = [
-  { name: 'startingPrice', label: 'Starting price', type: 'text', hint: 'For example 12000.00' },
-  { name: 'minIncrement', label: 'Minimum bid increment', type: 'text', hint: 'For example 100.00' },
+const auctionFields: FieldConfig[] = [
+  { name: 'startingPrice', label: 'Starting bid', hint: 'The first bid must be at least this', type: 'text' },
+  { name: 'minIncrement', label: 'Minimum raise', hint: 'Each new bid must beat the last by this much', type: 'text' },
   {
     name: 'endsAt',
-    label: 'Auction ends',
+    label: 'Auction closes',
+    hint: `${timeZone}. Between 1 hour and 30 days from now.`,
     type: 'datetime-local',
-    hint: `Your time zone: ${timeZone}. Between 1 hour and 30 days from now.`,
+    wide: true,
   },
 ]
 
@@ -31,13 +41,13 @@ function errorId(name: AuctionFormField): string {
   return `${name}-error`
 }
 
-function describedBy(name: AuctionFormField, hasHint: boolean): string | undefined {
-  const ids = [hasHint ? hintId(name) : null, form.visibleError(name) ? errorId(name) : null].filter(Boolean)
-  return ids.length > 0 ? ids.join(' ') : undefined
-}
-
 function hintId(name: AuctionFormField): string {
   return `${name}-hint`
+}
+
+function describedBy(name: AuctionFormField): string {
+  const ids = [hintId(name), form.visibleError(name) ? errorId(name) : null].filter(Boolean)
+  return ids.join(' ')
 }
 
 async function onSubmit(): Promise<void> {
@@ -47,71 +57,67 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <form class="stack-section" novalidate @submit.prevent="onSubmit">
-    <fieldset class="flex flex-col gap-6 min-w-0">
-      <legend class="text-display font-bold">The car</legend>
+  <form class="flex flex-col gap-6" novalidate @submit.prevent="onSubmit">
+    <fieldset class="grid min-w-0 gap-x-4 gap-y-3 sm:grid-cols-2">
+      <legend class="mb-1 text-body font-bold">The car</legend>
 
-      <div v-for="field in carFields" :key="field.name" class="flex flex-col gap-2">
-        <label :for="field.name" class="font-bold">{{ field.label }}</label>
-        <input
-          :id="field.name"
-          v-model="form.values[field.name]"
-          :type="field.type"
-          class="field"
-          :aria-invalid="form.visibleError(field.name) ? 'true' : undefined"
-          :aria-describedby="describedBy(field.name, Boolean(field.hint))"
-          @blur="form.touch(field.name)"
-        />
-        <p v-if="field.hint" :id="hintId(field.name)" class="text-meta text-ink-muted">{{ field.hint }}</p>
-        <p v-if="form.visibleError(field.name)" :id="errorId(field.name)" class="text-meta text-danger" role="alert">
-          {{ form.visibleError(field.name) }}
-        </p>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="description" class="font-bold">Description (optional)</label>
-        <textarea
-          id="description"
-          v-model="form.values.description"
-          class="field"
-          rows="4"
-          :aria-invalid="form.visibleError('description') ? 'true' : undefined"
-          :aria-describedby="describedBy('description', false)"
-          @blur="form.touch('description')"
-        />
-        <p v-if="form.visibleError('description')" :id="errorId('description')" class="text-meta text-danger" role="alert">
-          {{ form.visibleError('description') }}
-        </p>
-      </div>
-    </fieldset>
-
-    <fieldset class="flex flex-col gap-6 min-w-0">
-      <legend class="text-display font-bold">The auction</legend>
-
-      <div v-for="field in auctionFields" :key="field.name" class="flex flex-col gap-2">
-        <label :for="field.name" class="font-bold">{{ field.label }}</label>
-        <input
-          :id="field.name"
-          v-model="form.values[field.name]"
-          :type="field.type"
-          class="field"
-          :aria-invalid="form.visibleError(field.name) ? 'true' : undefined"
-          :aria-describedby="describedBy(field.name, true)"
-          @blur="form.touch(field.name)"
-        />
+      <div v-for="field in carFields" :key="field.name" :class="field.wide ? 'sm:col-span-2' : ''" class="flex flex-col gap-1">
+        <label :for="field.name" class="font-semibold">{{ field.label }}</label>
         <p :id="hintId(field.name)" class="text-meta text-ink-muted">{{ field.hint }}</p>
+
+        <textarea
+          v-if="field.type === 'textarea'"
+          :id="field.name"
+          v-model="form.values[field.name]"
+          class="field min-h-20 py-2"
+          rows="3"
+          :aria-invalid="form.visibleError(field.name) ? 'true' : undefined"
+          :aria-describedby="describedBy(field.name)"
+          @blur="form.touch(field.name)"
+        />
+        <input
+          v-else
+          :id="field.name"
+          v-model="form.values[field.name]"
+          :type="field.type"
+          class="field"
+          :aria-invalid="form.visibleError(field.name) ? 'true' : undefined"
+          :aria-describedby="describedBy(field.name)"
+          @blur="form.touch(field.name)"
+        />
+
         <p v-if="form.visibleError(field.name)" :id="errorId(field.name)" class="text-meta text-danger" role="alert">
           {{ form.visibleError(field.name) }}
         </p>
       </div>
     </fieldset>
 
-    <p v-if="form.failed.value" class="text-danger" role="alert">
-      Could not create the auction. Try again.
-    </p>
+    <fieldset class="grid min-w-0 gap-x-4 gap-y-3 sm:grid-cols-2">
+      <legend class="mb-1 text-body font-bold">The auction</legend>
 
-    <button type="submit" class="btn btn-primary" :disabled="!form.isValid.value || form.submitting.value">
-      {{ form.submitting.value ? 'Creating auction…' : 'Create auction' }}
-    </button>
+      <div v-for="field in auctionFields" :key="field.name" :class="field.wide ? 'sm:col-span-2' : ''" class="flex flex-col gap-1">
+        <label :for="field.name" class="font-semibold">{{ field.label }}</label>
+        <p :id="hintId(field.name)" class="text-meta text-ink-muted">{{ field.hint }}</p>
+        <input
+          :id="field.name"
+          v-model="form.values[field.name]"
+          :type="field.type"
+          class="field"
+          :aria-invalid="form.visibleError(field.name) ? 'true' : undefined"
+          :aria-describedby="describedBy(field.name)"
+          @blur="form.touch(field.name)"
+        />
+        <p v-if="form.visibleError(field.name)" :id="errorId(field.name)" class="text-meta text-danger" role="alert">
+          {{ form.visibleError(field.name) }}
+        </p>
+      </div>
+    </fieldset>
+
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="submit" class="btn btn-primary" :disabled="!form.isValid.value || form.submitting.value">
+        {{ form.submitting.value ? 'Creating auction…' : 'Create auction' }}
+      </button>
+      <p v-if="form.failed.value" class="text-danger" role="alert">Could not create the auction. Try again.</p>
+    </div>
   </form>
 </template>

@@ -22,10 +22,10 @@ describe('AuctionForm', () => {
   it('shows the make error once the make field is left empty', async () => {
     render(AuctionForm)
 
-    await fireEvent.blur(screen.getByLabelText('Make'))
+    await fireEvent.blur(screen.getByLabelText('Car make'))
 
     expect(screen.getByText('Enter a value.')).toBeTruthy()
-    expect(screen.getByLabelText('Make').getAttribute('aria-invalid')).toBe('true')
+    expect(screen.getByLabelText('Car make').getAttribute('aria-invalid')).toBe('true')
   })
 
   it('sends the auction once when the form is valid and reports the created auction', async () => {

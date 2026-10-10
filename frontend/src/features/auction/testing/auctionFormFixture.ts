@@ -9,11 +9,11 @@ export function localEndsIn(hours: number): string {
 
 /** Fills every field with valid data. */
 export async function fillValidAuctionForm(): Promise<void> {
-  await fireEvent.update(screen.getByLabelText('Make'), 'Volkswagen')
-  await fireEvent.update(screen.getByLabelText('Model'), 'Golf')
-  await fireEvent.update(screen.getByLabelText('Year'), '2020')
+  await fireEvent.update(screen.getByLabelText('Car make'), 'Volkswagen')
+  await fireEvent.update(screen.getByLabelText('Car model'), 'Golf')
+  await fireEvent.update(screen.getByLabelText('Year of manufacture'), '2020')
   await fireEvent.update(screen.getByLabelText('Mileage (km)'), '42000')
-  await fireEvent.update(screen.getByLabelText('Starting price'), '12000.00')
-  await fireEvent.update(screen.getByLabelText('Minimum bid increment'), '100.00')
-  await fireEvent.update(screen.getByLabelText('Auction ends'), localEndsIn(48))
+  await fireEvent.update(screen.getByLabelText('Starting bid'), '12000.00')
+  await fireEvent.update(screen.getByLabelText('Minimum raise'), '100.00')
+  await fireEvent.update(screen.getByLabelText('Auction closes'), localEndsIn(48))
 }

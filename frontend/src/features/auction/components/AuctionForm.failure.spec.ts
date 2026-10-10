@@ -24,7 +24,7 @@ describe('AuctionForm when the request fails', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Create auction' }))
 
     expect(await screen.findByText('Could not create the auction. Try again.')).toBeTruthy()
-    expect((screen.getByLabelText('Make') as HTMLInputElement).value).toBe('Volkswagen')
+    expect((screen.getByLabelText('Car make') as HTMLInputElement).value).toBe('Volkswagen')
     expect(screen.getByRole('button', { name: 'Create auction' }).hasAttribute('disabled')).toBe(false)
   })
 
