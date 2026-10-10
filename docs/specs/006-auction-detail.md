@@ -43,7 +43,7 @@ Body: the `AuctionResponse` shape from ADR 0010. `place-bid` is `{"href": ".../a
 
 Implementation shape:
 - Domain: `Bid` (id, bidder id, amount, placed at), `BidHistory.newest(bids)` (sort and cap at 50), `BidderName.mask`, and `Auction.bidCount()`, `highestBidderId()`, `isBiddableAt(Instant)`. 007 reuses this `Bid`.
-- Application: `GetAuctionDetail` use case with the `Clock`, `AuctionRepository.findById`, a `BidRepository` port (`findByAuctionId`) and the identity `UserDirectory`. It returns an `AuctionDetail` read model (auction, seller name, masked history, biddable flag) and throws `AuctionNotFoundException` for an unknown id.
+- Application: `GetAuctionDetail` use case with the `Clock`, `AuctionRepository.findById`, a `BidRepository` port (`findNewest(auctionId, limit)`, so storage reads only the 50 shown) and the identity `UserDirectory`. It returns an `AuctionDetail` read model (auction, seller name, masked history, biddable flag) and throws `AuctionNotFoundException` for an unknown id.
 - Persistence: `AuctionRepository.findById` with the car loaded, tested with Testcontainers. The `BidRepository` adapter returns no bids until 007 replaces it.
 - Web: `AuctionResponse` is built from `AuctionDetail`. The 004 create response goes through the same mapping, with a new auction's detail (seller name, no bids, biddable).
 

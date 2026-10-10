@@ -11,7 +11,7 @@ import java.util.List;
 class NoStoredBids implements BidRepository {
 
 	@Override
-	public List<Bid> findByAuctionId(long auctionId) {
+	public List<Bid> findNewest(long auctionId, int limit) {
 		return List.of();
 	}
 

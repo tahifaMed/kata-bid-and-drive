@@ -9,7 +9,9 @@ import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Reads one auction with its seller and its newest bids. Public: no identity is needed. */
 public class GetAuctionDetail {
@@ -28,16 +30,15 @@ public class GetAuctionDetail {
 
 	public AuctionDetail execute(long id) {
 		Auction auction = auctions.findById(id).orElseThrow(() -> new AuctionNotFoundException(id));
-		List<AuctionDetail.HistoryEntry> history = BidHistory.newest(bids.findByAuctionId(id)).stream()
-				.map(this::toEntry)
+		// The port already returns the newest bids; BidHistory keeps the order and cap whatever the adapter does.
+		List<Bid> newest = BidHistory.newest(bids.findNewest(id, BidHistory.LIMIT));
+		Map<UserId, String> maskedNames = new HashMap<>();
+		List<AuctionDetail.HistoryEntry> history = newest.stream()
+				.map(bid -> new AuctionDetail.HistoryEntry(bid.amount(), bid.placedAt(),
+						maskedNames.computeIfAbsent(bid.bidderId(), bidder -> BidderName.mask(displayName(bidder)))))
 				.toList();
 		return new AuctionDetail(auction, displayName(auction.sellerId()), history,
 				auction.isBiddableAt(clock.instant()));
-	}
-
-	private AuctionDetail.HistoryEntry toEntry(Bid bid) {
-		return new AuctionDetail.HistoryEntry(bid.amount(), bid.placedAt(),
-				BidderName.mask(displayName(bid.bidderId())));
 	}
 
 	/** Sellers and bidders reference {@code app_user}, so a missing user means broken data. */

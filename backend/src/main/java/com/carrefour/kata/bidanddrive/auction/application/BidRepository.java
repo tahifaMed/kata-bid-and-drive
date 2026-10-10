@@ -7,7 +7,7 @@ import java.util.List;
 /** Port for reading bids. Implemented in the persistence adapter. */
 public interface BidRepository {
 
-	/** All bids of the auction, in any order. */
-	List<Bid> findByAuctionId(long auctionId);
+	/** At most {@code limit} of the auction's newest bids, by {@code placedAt} then id, both descending. */
+	List<Bid> findNewest(long auctionId, int limit);
 
 }

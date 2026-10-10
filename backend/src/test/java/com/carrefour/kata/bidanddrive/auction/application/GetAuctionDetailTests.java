@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,35 @@ class GetAuctionDetailTests {
 	private final Map<Long, List<Bid>> bids = new HashMap<>();
 	private final FakeUsers users = new FakeUsers(
 			new User(ALICE, "Alice"), new User(BOB, "Bob"), new User(CAROL, "Carol"));
+	private final List<Integer> requestedLimits = new ArrayList<>();
 	private final GetAuctionDetail getAuctionDetail = new GetAuctionDetail(auctions,
-			auctionId -> bids.getOrDefault(auctionId, List.of()), users, Clock.fixed(NOW, ZoneOffset.UTC));
+			(auctionId, limit) -> {
+				requestedLimits.add(limit);
+				return bids.getOrDefault(auctionId, List.of());
+			},
+			users, Clock.fixed(NOW, ZoneOffset.UTC));
+
+	@Test
+	void asks_storage_for_the_fifty_newest_bids_only() {
+		auctions.add(auction(5, NOW.plusSeconds(3600)));
+
+		getAuctionDetail.execute(5);
+
+		assertThat(requestedLimits).containsExactly(50);
+	}
+
+	@Test
+	void looks_up_each_bidder_once_however_many_bids_they_placed() {
+		auctions.add(auction(5, NOW.plusSeconds(3600)));
+		bids.put(5L, List.of(
+				bid(1, BOB, "12000.00", NOW.minusSeconds(30)),
+				bid(2, CAROL, "12100.00", NOW.minusSeconds(20)),
+				bid(3, BOB, "12200.00", NOW.minusSeconds(10))));
+
+		getAuctionDetail.execute(5);
+
+		assertThat(users.lookups).containsExactlyInAnyOrder(ALICE, BOB, CAROL);
+	}
 
 	@Test
 	void an_unknown_id_is_not_found() {
@@ -154,6 +182,7 @@ class GetAuctionDetailTests {
 	private static class FakeUsers implements UserDirectory {
 
 		private final List<User> users;
+		final List<UserId> lookups = new ArrayList<>();
 
 		FakeUsers(User... users) {
 			this.users = List.of(users);
@@ -166,6 +195,7 @@ class GetAuctionDetailTests {
 
 		@Override
 		public Optional<User> findById(UserId id) {
+			lookups.add(id);
 			return users.stream().filter(user -> user.id().equals(id)).findFirst();
 		}
 
