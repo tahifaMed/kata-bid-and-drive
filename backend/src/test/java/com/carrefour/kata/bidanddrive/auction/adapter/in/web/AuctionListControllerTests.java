@@ -137,16 +137,20 @@ class AuctionListControllerTests {
 		mockMvc.perform(get("/api/auctions").param("page", "abc"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[*].field").value(contains("page")));
+		mockMvc.perform(get("/api/auctions").param("size", "abc"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errors[*].field").value(contains("size")));
 
 		verifyNoInteractions(listOpenAuctions);
 	}
 
 	@Test
-	void the_list_needs_no_identity_and_ignores_an_unknown_one() throws Exception {
+	void the_list_needs_no_identity_and_ignores_an_unknown_or_malformed_one() throws Exception {
 		givenPage(new PageQuery(0, 20), List.of(), false);
 
 		mockMvc.perform(get("/api/auctions")).andExpect(status().isOk());
 		mockMvc.perform(get("/api/auctions").header("X-User-Id", "999")).andExpect(status().isOk());
+		mockMvc.perform(get("/api/auctions").header("X-User-Id", "abc")).andExpect(status().isOk());
 	}
 
 	private void givenPage(PageQuery query, List<Auction> items, boolean hasNext) {
