@@ -43,3 +43,5 @@ Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) 
 - [ADR 0002](../adr/0002-sse-over-websocket.md): SSE over WebSocket for live bids.
 - [ADR 0003](../adr/0003-optimistic-locking-for-bids.md): optimistic locking for bids.
 - [ADR 0004](../adr/0004-money-as-json-string.md): money as JSON strings.
+- [ADR 0005](../adr/0005-bid-error-mapping.md): bid status codes and check order.
+- [ADR 0006](../adr/0006-bidding-rules.md): seller cannot bid, no self-outbid, first-bid rule.
