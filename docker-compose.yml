@@ -6,7 +6,8 @@ services:
       POSTGRES_USER: bidanddrive
       POSTGRES_PASSWORD: bidanddrive
     ports:
-      - "5432:5432"
+      # Loopback only: dev credentials must not be reachable from the network
+      - "127.0.0.1:5432:5432"
     volumes:
       # Postgres 18+ expects the mount at /var/lib/postgresql (not .../data)
       - postgres-data:/var/lib/postgresql
