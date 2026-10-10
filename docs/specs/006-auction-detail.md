@@ -26,7 +26,7 @@ Given / When / Then. Each criterion maps to at least one test.
 
 ## Domain rules and edge cases
 - Bidder names are masked to the first character (Unicode code point) followed by `***`. An empty name masks to `***`. Bidder ids are never shown in `bids`. `highestBidderId` is shown so that the live page (010) can tell whether the viewer is still winning.
-- The seller's `displayName` is shown in full. The seller id is not returned.
+- The seller's `displayName` is shown in full. The seller id is not returned. 007 adds `sellerId` so the bid panel can tell the seller apart, the same way `highestBidderId` is already exposed.
 - The seller and the bidders are foreign keys to `app_user`, so they always exist. If the `UserDirectory` lookup still finds none, the use case throws `IllegalStateException`, which gives a 500 without a stack trace in the body.
 - The bid history is the 50 newest bids, sorted by `placedAt` descending, then by bid id descending. Full history is out of scope.
 - `currentBid`, `bidCount` and `highestBidderId` come from the `Auction`, not from the bid history. In 006 they are the starting price, 0 and null, because no bids are stored. 007 stores them on the auction row and changes these methods, together with `minNextBid` (`currentBid + minIncrement` once a bid exists, [ADR 0006](../adr/0006-bidding-rules.md)).
@@ -50,7 +50,7 @@ Implementation shape:
 ## UI (frontend)
 - Route `/auctions/:id`, lazy `AuctionDetailView` in `src/features/auction/views/`.
 - Components in `src/features/auction/components/`: `CarDetails.vue`, `PriceSummary.vue`, `BidHistory.vue`. A missing photo uses the 005 placeholder.
-- The bid panel is added in 007. Here it is a placeholder slot, rendered only when the `place-bid` link is present.
+- The bid panel is added in 007. Here it is a placeholder slot, rendered only when the `place-bid` link is present. 007 replaces the slot with the panel itself, in the same section.
 - Composable `src/features/auction/composables/useAuctionDetail.ts` fetches and holds the detail state.
 
 ## Slices

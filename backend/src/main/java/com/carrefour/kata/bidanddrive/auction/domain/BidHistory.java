@@ -9,7 +9,7 @@ public final class BidHistory {
 	public static final int LIMIT = 50;
 
 	private static final Comparator<Bid> NEWEST_FIRST = Comparator.comparing(Bid::placedAt)
-			.thenComparingLong(Bid::id)
+			.thenComparing(Bid::id)
 			.reversed();
 
 	private BidHistory() {

@@ -53,6 +53,8 @@ export interface AuctionResponse {
   status: 'OPEN'
   car: CarDetails
   seller: { displayName: string }
+  /** Lets the bid panel tell the seller apart (spec 007). */
+  sellerId: number
   startingPrice: string
   minIncrement: string
   currentBid: string

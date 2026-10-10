@@ -2,13 +2,14 @@
 import { computed, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import UserSwitcher from '../../../components/UserSwitcher.vue'
+import BidPanel from '../../bidding/components/BidPanel.vue'
 import BidHistory from '../components/BidHistory.vue'
 import CarDetails from '../components/CarDetails.vue'
 import PriceSummary from '../components/PriceSummary.vue'
 import { useAuctionDetail } from '../composables/useAuctionDetail'
 
 const route = useRoute()
-const { state, auction, loadedAt, load, retry } = useAuctionDetail()
+const { state, auction, loadedAt, load, retry, refresh } = useAuctionDetail()
 
 // The same view is reused when only the id changes, so watch the param instead of loading once.
 watch(
@@ -60,10 +61,10 @@ const biddable = computed(() => Boolean(auction.value?._links['place-bid']))
             <PriceSummary :auction="auction" :now="loadedAt" />
           </section>
 
-          <!-- Spec 007 puts the bid form here. Only an auction that takes bids gets it. -->
+          <!-- Only an auction that takes bids gets the bid panel. -->
           <section v-if="biddable" class="stack" aria-labelledby="bid-panel-title">
             <h2 id="bid-panel-title" class="text-title font-bold">Place a bid</h2>
-            <slot name="bid-panel" :auction="auction" />
+            <BidPanel :auction="auction" @placed="refresh" />
           </section>
 
           <section class="stack" aria-labelledby="history-title">

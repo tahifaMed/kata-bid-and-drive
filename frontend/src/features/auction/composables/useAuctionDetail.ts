@@ -51,5 +51,20 @@ export function useAuctionDetail() {
     return load(requestedId)
   }
 
-  return { state, auction, loadedAt, load, retry }
+  /** Fetches the shown auction again, without the loading state, so the page stays on screen (spec 007). */
+  async function refresh(): Promise<void> {
+    const id = parseId(requestedId)
+    if (id === null || auction.value === null) return
+    const request = ++latestRequest
+    try {
+      const result = await fetchAuction(id)
+      if (request !== latestRequest) return
+      auction.value = result
+      loadedAt.value = Date.now()
+    } catch {
+      // The last auction stays shown. The bid panel has already said what went wrong.
+    }
+  }
+
+  return { state, auction, loadedAt, load, retry, refresh }
 }

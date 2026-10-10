@@ -110,4 +110,50 @@ describe('useAuctionDetail', () => {
     expect(fetchAuction).toHaveBeenLastCalledWith(7)
     expect(detail.state.value).toBe('ready')
   })
+
+  it('refreshes the auction without going back to loading', async () => {
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail())
+    let answer: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+    vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+    const detail = useAuctionDetail()
+    await detail.load('5')
+
+    const refreshed = detail.refresh()
+    expect(detail.state.value).toBe('ready')
+    expect(detail.auction.value?.bidCount).toBe(0)
+    answer(auctionDetail({ bidCount: 1, currentBid: '12000.00', minNextBid: '12100.00' }))
+    await refreshed
+
+    expect(fetchAuction).toHaveBeenLastCalledWith(5)
+    expect(detail.state.value).toBe('ready')
+    expect(detail.auction.value?.bidCount).toBe(1)
+  })
+
+  it('keeps the last auction shown when a refresh fails', async () => {
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail())
+    vi.mocked(fetchAuction).mockRejectedValueOnce(new TypeError('Network down'))
+    const detail = useAuctionDetail()
+    await detail.load('5')
+
+    await detail.refresh()
+
+    expect(detail.state.value).toBe('ready')
+    expect(detail.auction.value?.id).toBe(5)
+  })
+
+  it('drops a refresh that answers after the page moved to another auction', async () => {
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail())
+    let answerRefresh: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+    vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (answerRefresh = resolve)))
+    vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ id: 6 }))
+    const detail = useAuctionDetail()
+    await detail.load('5')
+
+    const refreshed = detail.refresh()
+    await detail.load('6')
+    answerRefresh(auctionDetail({ id: 5, bidCount: 1 }))
+    await refreshed
+
+    expect(detail.auction.value?.id).toBe(6)
+  })
 })

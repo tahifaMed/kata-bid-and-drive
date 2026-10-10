@@ -14,6 +14,7 @@ export function auctionDetail(overrides: Partial<AuctionResponse> = {}): Auction
       imageUrl: 'https://example.com/golf.jpg',
     },
     seller: { displayName: 'Alice' },
+    sellerId: 1,
     startingPrice: '12000.00',
     minIncrement: '100.00',
     currentBid: '12000.00',

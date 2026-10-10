@@ -4,7 +4,9 @@ import com.carrefour.kata.bidanddrive.auction.application.AuctionRepository;
 import com.carrefour.kata.bidanddrive.auction.application.BidRepository;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
 import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
+import com.carrefour.kata.bidanddrive.auction.application.GetBid;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
+import com.carrefour.kata.bidanddrive.auction.application.PlaceBid;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionWindow;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -36,6 +38,16 @@ class AuctionConfiguration {
 	GetAuctionDetail getAuctionDetail(AuctionRepository auctions, BidRepository bids, UserDirectory users,
 			Clock clock) {
 		return new GetAuctionDetail(auctions, bids, users, clock);
+	}
+
+	@Bean
+	GetBid getBid(BidRepository bids) {
+		return new GetBid(bids);
+	}
+
+	@Bean
+	PlaceBid placeBid(AuctionRepository auctions, Clock clock) {
+		return new PlaceBid(auctions, clock);
 	}
 
 }
