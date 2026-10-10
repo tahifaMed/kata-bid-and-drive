@@ -34,7 +34,7 @@ describe('identity store', () => {
     expect(useIdentityStore().currentUserId).toBe(2)
   })
 
-  it('falls back to user 1 when the stored user is no longer in the seeded users', async () => {
+  it('resets a stored user that is no longer seeded to user 1 once users load', async () => {
     localStorage.setItem(STORAGE_KEY, '9')
     vi.spyOn(usersApi, 'fetchUsers').mockResolvedValue(seededUsers)
 
@@ -42,6 +42,7 @@ describe('identity store', () => {
     await store.loadUsers()
 
     expect(store.currentUserId).toBe(1)
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('1')
   })
 
   it('falls back to user 1 when storage cannot be read', () => {
