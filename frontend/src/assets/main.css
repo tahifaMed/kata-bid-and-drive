@@ -39,7 +39,7 @@
   --text-display--line-height: 2.25rem;
   --text-title: 1.0625rem;
   --text-title--line-height: 1.35rem;
-  --text-body: 0.9375rem;
+  --text-body: 1rem;
   --text-body--line-height: 1.5rem;
   --text-meta: 0.875rem;
   --text-meta--line-height: 1.25rem;
@@ -94,7 +94,7 @@
 @layer components {
   /* Buttons: pill shape, 44px minimum touch height */
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4
       text-body font-semibold no-underline transition-colors
       disabled:cursor-not-allowed disabled:opacity-50;
   }
@@ -121,14 +121,14 @@
 
   /* Overlay chip on a photo: time left and current bid */
   .image-chip {
-    @apply inline-flex items-center gap-2 rounded-md bg-overlay px-2.5 py-1
+    @apply inline-flex items-center gap-2 rounded-md bg-overlay px-2 py-1
       text-meta font-semibold text-white;
   }
 
-  /* Underlined sort tabs */
+  /* Underlined sort tabs, 44px minimum touch height */
   .tab {
-    @apply border-b-2 border-transparent pb-1 text-meta text-ink-muted no-underline
-      hover:text-ink;
+    @apply inline-flex min-h-11 items-center border-b-2 border-transparent text-meta
+      text-ink-muted no-underline hover:text-ink;
   }
 
   .tab-active {
@@ -200,4 +200,21 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/*
+ * Legacy aliases for the create-vue template pages (WelcomeItem.vue, App shell).
+ * Remove this block when those pages move to the design tokens above.
+ */
+:root {
+  --color-text: var(--color-ink);
+  --color-heading: var(--color-ink);
+  --color-background: var(--color-surface);
+  --section-gap: 160px;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
 }
