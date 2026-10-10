@@ -116,6 +116,23 @@ describe('AuctionsView', () => {
     expect(screen.getByRole('button', { name: 'Previous' }).hasAttribute('disabled')).toBe(false)
   })
 
+  it('after a failed Next, the page on screen stays put and Next again asks for the page after it', async () => {
+    vi.mocked(fetchOpenAuctions)
+      .mockResolvedValueOnce(page([item(1, 'Porsche', '911')], { next: true }))
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(page([item(21, 'Audi', 'S4')], { number: 1, prev: true, next: true }))
+    renderView()
+
+    await fireEvent.click(await screen.findByRole('button', { name: 'Next' }))
+    await screen.findByRole('alert')
+    expect(screen.getByText('Page 1')).toBeTruthy()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(await screen.findByRole('heading', { name: '2020 Audi S4' })).toBeTruthy()
+    expect(fetchOpenAuctions).toHaveBeenNthCalledWith(3, 1)
+  })
+
   it('disables Next on the last page', async () => {
     vi.mocked(fetchOpenAuctions).mockResolvedValue(page([item(1, 'Porsche', '911')]))
     renderView()

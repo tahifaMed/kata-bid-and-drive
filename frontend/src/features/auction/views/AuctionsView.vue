@@ -13,8 +13,11 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
 type LoadState = 'loading' | 'ready' | 'error'
 
 const state = ref<LoadState>('loading')
-const currentPage = ref(0)
+// The page last asked for. Retry uses it, so a failed request is retried, not the page before it.
+const requestedPage = ref(0)
 const pageData = ref<AuctionListPage | null>(null)
+// The page on screen comes from the last successful response, so a failed request does not move it.
+const currentPage = computed(() => pageData.value?.page.number ?? 0)
 // Time left on the cards is measured from when the data arrived.
 const loadedAt = ref(Date.now())
 
@@ -23,7 +26,7 @@ const hasPrev = computed(() => Boolean(pageData.value?._links.prev))
 const hasNext = computed(() => Boolean(pageData.value?._links.next))
 
 async function load(page: number) {
-  currentPage.value = page
+  requestedPage.value = page
   state.value = 'loading'
   try {
     pageData.value = await fetchOpenAuctions(page)
@@ -106,7 +109,9 @@ onMounted(() => load(0))
 
       <div v-else-if="state === 'error'" role="alert" class="flex flex-wrap items-center gap-3">
         <p>Could not load auctions.</p>
-        <button type="button" class="btn btn-outline" @click="load(currentPage)">Try again</button>
+        <button type="button" class="btn btn-outline" @click="load(requestedPage)">
+          Try again
+        </button>
       </div>
 
       <p v-else-if="auctions.length === 0" class="text-ink-muted">
