@@ -1,53 +1,64 @@
 import { cleanup, render, screen } from '@testing-library/vue'
 import { afterEach, describe, expect, it } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import AuctionCard from './AuctionCard.vue'
-import type { AuctionListing } from '../types'
+import type { AuctionListItem } from '../types'
 
-const listing: AuctionListing = {
-  id: 'test-car',
-  title: '2013 Porsche 911 Carrera 4S',
-  specs: '15k miles, 7-speed manual, naturally aspirated flat-six',
-  location: 'Carmichael, CA',
-  timeLeft: '2 days',
-  currentBid: 81500,
-  noReserve: false,
-  image: '/images/auctions/test-car.jpg',
-  imageAlt: '2013 Porsche 911 Carrera 4S coupe, front three-quarter view',
-  credit: { author: 'Test Author', license: 'CC BY-SA 4.0', url: 'https://example.com' },
+const endsAt = '2026-10-12T12:00:00Z'
+const NOW = Date.parse('2026-10-10T12:00:00Z')
+
+const auction: AuctionListItem = {
+  id: 7,
+  car: { make: 'Porsche', model: '911 Carrera 4S', year: 2013, imageUrl: 'https://example.com/911.jpg' },
+  currentBid: '81500.00',
+  minNextBid: '81500.00',
+  bidCount: 0,
+  endsAt,
+  _links: { self: { href: 'http://localhost/api/auctions/7' } },
+}
+
+function testRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: '/auctions/:id', component: AuctionCard }],
+  })
 }
 
 afterEach(() => cleanup())
 
 describe('AuctionCard', () => {
-  it('shows the title, specs and location', () => {
-    render(AuctionCard, { props: { listing } })
+  it('shows the year, make and model as the title', () => {
+    render(AuctionCard, { props: { auction, now: NOW }, global: { plugins: [testRouter()] } })
 
-    // getBy* throws when the element is missing, so these also assert presence
-    expect(screen.getByRole('heading', { name: listing.title })).toBeTruthy()
-    expect(screen.getByText(listing.specs)).toBeTruthy()
-    expect(screen.getByText(listing.location)).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '2013 Porsche 911 Carrera 4S' })).toBeTruthy()
   })
 
   it('shows the time left and the current bid with a currency code and two decimals', () => {
-    render(AuctionCard, { props: { listing } })
+    render(AuctionCard, { props: { auction, now: NOW }, global: { plugins: [testRouter()] } })
 
-    expect(screen.getByText('2 days')).toBeTruthy()
+    expect(screen.getByText('2d 0h')).toBeTruthy()
     expect(screen.getByText(/USD\s81,500\.00/)).toBeTruthy()
   })
 
-  it('shows the no reserve badge only when the auction has no reserve', () => {
-    const { unmount } = render(AuctionCard, { props: { listing } })
-    expect(screen.queryByText('No reserve')).toBeNull()
-    unmount()
+  it('shows the photo with the title as its alt text', () => {
+    render(AuctionCard, { props: { auction, now: NOW }, global: { plugins: [testRouter()] } })
 
-    render(AuctionCard, { props: { listing: { ...listing, noReserve: true } } })
-    expect(screen.getByText('No reserve')).toBeTruthy()
+    const img = screen.getByRole('img', { name: '2013 Porsche 911 Carrera 4S' })
+    expect(img.getAttribute('src')).toBe('https://example.com/911.jpg')
   })
 
-  it('shows the photo with its alt text', () => {
-    render(AuctionCard, { props: { listing } })
+  it('shows the neutral placeholder when the auction has no photo', () => {
+    const { container } = render(AuctionCard, {
+      props: { auction: { ...auction, car: { ...auction.car, imageUrl: null } }, now: NOW },
+      global: { plugins: [testRouter()] },
+    })
 
-    const img = screen.getByRole('img', { name: listing.imageAlt })
-    expect(img.getAttribute('src')).toBe(listing.image)
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/images/auctions/no-photo.svg')
+  })
+
+  it('links the whole card to the auction page', () => {
+    render(AuctionCard, { props: { auction, now: NOW }, global: { plugins: [testRouter()] } })
+
+    expect(screen.getByRole('link', { name: /2013 Porsche 911 Carrera 4S/ }).getAttribute('href')).toBe('/auctions/7')
   })
 })

@@ -1,7 +1,6 @@
 ---
 name: open-pr
 description: Push the current feature branch and open a GitHub pull request linked to its spec, with a short body and test evidence. Use when all slices of a spec are done and /test passes.
-disable-model-invocation: true
 ---
 
 # Open a PR

@@ -1,7 +1,6 @@
 ---
 name: commit
 description: Create one small, clear Conventional Commit for the staged logical change on a feature branch. Use after finishing a slice or a logical change, never on main.
-disable-model-invocation: true
 ---
 
 # Commit

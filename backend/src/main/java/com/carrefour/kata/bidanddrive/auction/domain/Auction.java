@@ -37,6 +37,16 @@ public record Auction(
 		return new Auction(null, sellerId, car, start, increment, endsAt, AuctionStatus.OPEN);
 	}
 
+	/** The highest bid, or the starting price while there are no bids. Spec 007 adds bids to this rule. */
+	public Money currentBid() {
+		return startingPrice;
+	}
+
+	/** The starting price while there are no bids (spec 004). */
+	public Money minNextBid() {
+		return startingPrice;
+	}
+
 	private static void checkYear(int year, Instant now) {
 		int latest = Year.from(now.atZone(ZoneOffset.UTC)).getValue() + 1;
 		if (year < FIRST_YEAR || year > latest) {

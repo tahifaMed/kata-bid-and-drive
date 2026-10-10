@@ -1,5 +1,7 @@
 import { apiFetch } from '../../api/client'
-import type { AuctionResponse, CreateAuctionRequest } from './types'
+import type { AuctionListPage, AuctionResponse, CreateAuctionRequest } from './types'
+
+const PAGE_SIZE = 20
 
 export function createAuction(request: CreateAuctionRequest): Promise<AuctionResponse> {
   return apiFetch<AuctionResponse>('/api/auctions', {
@@ -7,4 +9,9 @@ export function createAuction(request: CreateAuctionRequest): Promise<AuctionRes
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   })
+}
+
+/** One page of open auctions, 0-based (spec 005). */
+export function fetchOpenAuctions(page: number): Promise<AuctionListPage> {
+  return apiFetch<AuctionListPage>(`/api/auctions?page=${page}&size=${PAGE_SIZE}`)
 }

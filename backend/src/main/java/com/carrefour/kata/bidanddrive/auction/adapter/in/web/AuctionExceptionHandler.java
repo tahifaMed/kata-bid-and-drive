@@ -7,6 +7,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,23 @@ class AuctionExceptionHandler {
 				.map(error -> Map.of("field", error.getField(), "message", error.getDefaultMessage()))
 				.toList();
 		return invalid(errors);
+	}
+
+	/** Paging bounds from {@code @Min} and {@code @Max} on the list parameters. */
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	ProblemDetail handleInvalidParameters(HandlerMethodValidationException exception) {
+		List<Map<String, String>> errors = exception.getParameterValidationResults().stream()
+				.flatMap(result -> result.getResolvableErrors().stream()
+						.map(error -> Map.of("field", result.getMethodParameter().getParameterName(),
+								"message", error.getDefaultMessage())))
+				.toList();
+		return invalid(errors);
+	}
+
+	/** A paging value that is not a whole number, such as {@code page=abc}. */
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ProblemDetail handleNotANumber(MethodArgumentTypeMismatchException exception) {
+		return invalid(List.of(Map.of("field", exception.getName(), "message", "must be a whole number")));
 	}
 
 	@ExceptionHandler(InvalidAuctionException.class)
