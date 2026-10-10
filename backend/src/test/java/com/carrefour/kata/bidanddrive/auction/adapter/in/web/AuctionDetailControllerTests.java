@@ -70,6 +70,7 @@ class AuctionDetailControllerTests {
 				.andExpect(jsonPath("$.car.imageUrl").value("https://example.com/golf.jpg"))
 				.andExpect(jsonPath("$.seller.displayName").value("Alice"))
 				.andExpect(jsonPath("$.seller.id").doesNotExist())
+				.andExpect(jsonPath("$.sellerId").value(1))
 				.andExpect(jsonPath("$.startingPrice").value("12000.00"))
 				.andExpect(jsonPath("$.minIncrement").value("100.00"))
 				.andExpect(jsonPath("$.endsAt").value("2026-10-12T18:00:00Z"))

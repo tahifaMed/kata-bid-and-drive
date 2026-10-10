@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,6 +55,31 @@ class PlaceBidApiTests {
 				.andExpect(jsonPath("$.highestBidderId").value(2))
 				.andExpect(jsonPath("$.bids[0].amount").value("1000.00"))
 				.andExpect(jsonPath("$.bids[0].bidderName").value("B***"));
+	}
+
+	@Test
+	void the_location_of_a_placed_bid_is_readable_by_its_bidder_only() throws Exception {
+		long id = openAuction();
+		String location = bid(id, "2", "\"1000.00\"").andReturn().getResponse().getHeader("Location");
+
+		mockMvc.perform(get(location).header("X-User-Id", "2"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.bidderId").value(2))
+				.andExpect(jsonPath("$.amount").value("1000.00"))
+				.andExpect(jsonPath("$._links.self.href").value(location));
+		mockMvc.perform(get(location).header("X-User-Id", "3")).andExpect(status().isNotFound());
+		mockMvc.perform(get(location)).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void the_detail_names_the_seller_and_the_list_counts_the_bids() throws Exception {
+		// Ends soon, so it sorts near the top of the open list.
+		long id = auction(Instant.now().plus(Duration.ofMinutes(5)));
+		bid(id, "2", "\"1000.00\"").andExpect(status().isCreated());
+
+		mockMvc.perform(get("/api/auctions/{id}", id)).andExpect(jsonPath("$.sellerId").value(1));
+		mockMvc.perform(get("/api/auctions").param("size", "100"))
+				.andExpect(jsonPath("$._embedded.auctions[?(@.id == " + id + ")].bidCount").value(contains(1)));
 	}
 
 	@Test

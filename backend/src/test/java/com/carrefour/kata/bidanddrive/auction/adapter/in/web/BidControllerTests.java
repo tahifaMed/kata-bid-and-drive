@@ -1,6 +1,8 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
 import com.carrefour.kata.bidanddrive.auction.application.AuctionNotFoundException;
+import com.carrefour.kata.bidanddrive.auction.application.BidNotFoundException;
+import com.carrefour.kata.bidanddrive.auction.application.GetBid;
 import com.carrefour.kata.bidanddrive.auction.application.InvalidBidException;
 import com.carrefour.kata.bidanddrive.auction.application.PlaceBid;
 import com.carrefour.kata.bidanddrive.auction.application.RawAmount;
@@ -33,6 +35,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -49,6 +52,9 @@ class BidControllerTests {
 
 	@MockitoBean
 	private PlaceBid placeBid;
+
+	@MockitoBean
+	private GetBid getBid;
 
 	@MockitoBean
 	private UserDirectory users;
@@ -148,6 +154,35 @@ class BidControllerTests {
 				.andExpect(status().isUnprocessableContent())
 				.andExpect(jsonPath("$.minimumBid").value("1100.00"))
 				.andExpect(jsonPath("$.detail").value("The bid must be at least 1100.00"));
+	}
+
+	@Test
+	void the_bidder_reads_their_bid_with_its_links() throws Exception {
+		given(getBid.execute(5, 12, BOB))
+				.willReturn(new Bid(12L, 5, BOB, new Money(new BigDecimal("1000.00")), PLACED_AT));
+
+		mockMvc.perform(get("/api/auctions/5/bids/12").header("X-User-Id", "2"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(12))
+				.andExpect(jsonPath("$.amount").value("1000.00"))
+				.andExpect(jsonPath("$._links.self.href").value("http://localhost/api/auctions/5/bids/12"))
+				.andExpect(jsonPath("$._links.auction.href").value("http://localhost/api/auctions/5"));
+	}
+
+	@Test
+	void a_bid_the_caller_cannot_see_is_not_found() throws Exception {
+		given(getBid.execute(5, 12, BOB)).willThrow(new BidNotFoundException(5, 12));
+
+		mockMvc.perform(get("/api/auctions/5/bids/12").header("X-User-Id", "2"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Bid not found"));
+	}
+
+	@Test
+	void reading_a_bid_needs_an_identity() throws Exception {
+		mockMvc.perform(get("/api/auctions/5/bids/12")).andExpect(status().isUnauthorized());
+
+		verifyNoInteractions(getBid);
 	}
 
 	private ResultActions rejectWith(RuntimeException rejection) throws Exception {

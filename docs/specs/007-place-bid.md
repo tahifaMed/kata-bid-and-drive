@@ -102,7 +102,7 @@ Given / When / Then. Each criterion maps to at least one test.
    - `PlaceBid` use case in one transaction.
    - `POST` controller with `RawAmount`, HAL `_links` and `Location`.
    - `BidExceptionHandler`: 400 "Invalid bid", 401, 403, 404, 409, and 422 with `minimumBid`.
-4. **Backend API, read side** (criteria 1 `sellerId` and list `bidCount`, 8 for `GET`).
+4. Done. **Backend API, read side** (criteria 1 `sellerId` and list `bidCount`, 8 for `GET`).
    - `GET` single bid under [ADR 0013](../adr/0013-bid-resource-visibility.md).
    - `sellerId` on the detail, real `bidCount` on the list.
 5. **Backend concurrency** (criteria 7, 9 parallel).

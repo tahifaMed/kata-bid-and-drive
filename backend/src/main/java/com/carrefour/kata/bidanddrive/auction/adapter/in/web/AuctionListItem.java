@@ -23,7 +23,7 @@ public record AuctionListItem(
 				CarSummary.from(auction.car()),
 				auction.currentBid().amount().toPlainString(),
 				auction.minNextBid().amount().toPlainString(),
-				0, // no bids are stored until spec 007
+				auction.bidCount(),
 				auction.endsAt(),
 				Map.of("self", new AuctionResponse.Link(self.toString())));
 	}

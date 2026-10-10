@@ -1,11 +1,13 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
+import com.carrefour.kata.bidanddrive.auction.application.GetBid;
 import com.carrefour.kata.bidanddrive.auction.application.PlaceBid;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
 import com.carrefour.kata.bidanddrive.identity.adapter.in.web.CurrentUser;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +22,11 @@ import java.net.URI;
 class BidController {
 
 	private final PlaceBid placeBid;
+	private final GetBid getBid;
 
-	BidController(PlaceBid placeBid) {
+	BidController(PlaceBid placeBid, GetBid getBid) {
 		this.placeBid = placeBid;
+		this.getBid = getBid;
 	}
 
 	/**
@@ -37,6 +41,13 @@ class BidController {
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.location(location)
 				.body(BidResponse.of(bid, location, auctionUri(auctionId)));
+	}
+
+	/** Only the bidder sees their bid; anyone else gets a 404 (ADR 0013). */
+	@GetMapping("/{bidId}")
+	BidResponse read(@CurrentUser UserId viewer, @PathVariable long auctionId, @PathVariable long bidId) {
+		Bid bid = getBid.execute(auctionId, bidId, viewer);
+		return BidResponse.of(bid, bidUri(auctionId, bidId), auctionUri(auctionId));
 	}
 
 	private static URI bidUri(long auctionId, long bidId) {

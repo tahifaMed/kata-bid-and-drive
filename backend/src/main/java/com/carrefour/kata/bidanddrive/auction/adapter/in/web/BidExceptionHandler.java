@@ -1,6 +1,7 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
 import com.carrefour.kata.bidanddrive.auction.application.AuctionNotFoundException;
+import com.carrefour.kata.bidanddrive.auction.application.BidNotFoundException;
 import com.carrefour.kata.bidanddrive.auction.application.InvalidBidException;
 import com.carrefour.kata.bidanddrive.auction.domain.AlreadyHighestBidderException;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionClosedException;
@@ -62,6 +63,13 @@ class BidExceptionHandler {
 	ProblemDetail handleNotFound(AuctionNotFoundException exception) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 		problem.setTitle("Auction not found");
+		return problem;
+	}
+
+	@ExceptionHandler(BidNotFoundException.class)
+	ProblemDetail handleBidNotFound(BidNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setTitle("Bid not found");
 		return problem;
 	}
 
