@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import UserSwitcher from '../../../components/UserSwitcher.vue'
 import AuctionCard from '../components/AuctionCard.vue'
 import { sampleAuctions } from '../data/sampleAuctions'
@@ -29,7 +30,7 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
             placeholder="Search for cars (ex. BMW, Audi, Ford)"
           />
           <UserSwitcher />
-          <button type="button" class="btn btn-outline">Sell a car</button>
+          <RouterLink to="/auctions/new" class="btn btn-outline">Sell a car</RouterLink>
           <button type="button" class="btn btn-primary">Sign up</button>
         </div>
       </div>
