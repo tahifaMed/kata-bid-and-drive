@@ -13,10 +13,10 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
       <div class="container-app flex flex-wrap items-center gap-x-6 gap-y-3 py-4">
         <a href="/" class="text-lg font-bold no-underline">BidAndDrive</a>
 
-        <nav class="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Main">
+        <nav class="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Main">
           <a href="/auctions" class="no-underline">Auctions</a>
-          <a href="#" class="no-underline">Watch list</a>
-          <a href="#" class="no-underline">About</a>
+          <span class="text-ink-muted" aria-disabled="true">Watch list</span>
+          <span class="text-ink-muted" aria-disabled="true">About</span>
         </nav>
 
         <div class="flex w-full flex-wrap items-center gap-3 sm:ml-auto sm:w-auto">
@@ -58,17 +58,17 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
           </button>
         </div>
 
-        <nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label="Sort auctions">
+        <div class="flex flex-wrap gap-x-4 gap-y-2" role="group" aria-label="Sort auctions">
           <button
             v-for="(tab, index) in sortTabs"
             :key="tab"
             type="button"
             :class="['tab', index === 0 && 'tab-active']"
-            :aria-current="index === 0 ? 'page' : undefined"
+            :aria-pressed="index === 0 ? 'true' : 'false'"
           >
             {{ tab }}
           </button>
-        </nav>
+        </div>
       </div>
 
       <ul class="auction-grid">
@@ -80,7 +80,9 @@ const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage',
 
     <footer class="border-t border-border">
       <div class="container-app py-6 text-meta text-ink-muted">
-        <p class="mb-2">Sample photos from Wikimedia Commons:</p>
+        <p class="mb-2">
+          Listings are illustrative samples. Sample photos are from Wikimedia Commons:
+        </p>
         <ul class="flex flex-col gap-1">
           <li v-for="auction in sampleAuctions" :key="auction.id">
             <a :href="auction.credit.url" target="_blank" rel="noopener">{{ auction.title }}</a
