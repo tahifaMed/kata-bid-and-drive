@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,6 +62,11 @@ class ListOpenAuctionsTests {
 			this.now = now;
 			this.query = query;
 			return result;
+		}
+
+		@Override
+		public Optional<Auction> findById(long id) {
+			throw new UnsupportedOperationException("not used by this test");
 		}
 
 	}

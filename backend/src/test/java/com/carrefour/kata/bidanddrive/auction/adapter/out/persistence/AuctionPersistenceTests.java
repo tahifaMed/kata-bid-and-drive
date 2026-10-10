@@ -2,8 +2,10 @@ package com.carrefour.kata.bidanddrive.auction.adapter.out.persistence;
 
 import com.carrefour.kata.bidanddrive.TestcontainersConfiguration;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionWindow;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
+import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,7 @@ class AuctionPersistenceTests {
 		Auction saved = auctions.save(auction);
 
 		assertThat(saved.id()).isNotNull();
-		Auction found = auctions.findById(saved.id());
+		Auction found = auctions.findById(saved.id()).orElseThrow();
 		assertThat(found.car()).isEqualTo(car);
 		assertThat(found.sellerId()).isEqualTo(new UserId(1));
 		assertThat(found.startingPrice().amount()).isEqualByComparingTo("12000.00");
@@ -68,6 +70,25 @@ class AuctionPersistenceTests {
 				"INSERT INTO car (auction_id, make, model, year, mileage_km) VALUES (?, 'Renault', 'Clio', 2018, 0)",
 				saved.id()))
 				.isInstanceOf(DataIntegrityViolationException.class);
+	}
+
+	@Test
+	void find_by_id_returns_an_auction_that_has_already_ended() {
+		Instant ended = Instant.now().minus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MICROS);
+		Auction saved = auctions.save(new Auction(null, new UserId(1),
+				new Car("Fiat", "Panda", 2015, 90000, null, null),
+				new Money(new BigDecimal("3000.00")), new Money(new BigDecimal("50.00")),
+				ended, AuctionStatus.OPEN));
+
+		Auction found = auctions.findById(saved.id()).orElseThrow();
+
+		assertThat(found.endsAt()).isEqualTo(ended);
+		assertThat(found.car().make()).isEqualTo("Fiat");
+	}
+
+	@Test
+	void find_by_id_of_an_unknown_auction_is_empty() {
+		assertThat(auctions.findById(Long.MAX_VALUE)).isEmpty();
 	}
 
 	private int countAuctions() {

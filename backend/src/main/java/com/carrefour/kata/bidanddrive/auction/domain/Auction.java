@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 /** An auction for one car. {@code id} is null until the auction is saved. */
 public record Auction(
@@ -45,6 +46,21 @@ public record Auction(
 	/** The starting price while there are no bids (spec 004). */
 	public Money minNextBid() {
 		return startingPrice;
+	}
+
+	/** No bids are stored until spec 007, which keeps the count on the auction (ADR 0003). */
+	public int bidCount() {
+		return 0;
+	}
+
+	/** Empty while there are no bids. Spec 007 stores the highest bidder on the auction. */
+	public Optional<UserId> highestBidderId() {
+		return Optional.empty();
+	}
+
+	/** Open and not yet ended. The stored status does not change at the end time; auto-close is spec 011. */
+	public boolean isBiddableAt(Instant now) {
+		return status == AuctionStatus.OPEN && endsAt.isAfter(now);
 	}
 
 	private static void checkYear(int year, Instant now) {

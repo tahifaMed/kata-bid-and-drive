@@ -54,8 +54,8 @@ Implementation shape:
 - Composable `src/features/auction/composables/useAuctionDetail.ts` fetches and holds the detail state.
 
 ## Slices
-1. Backend domain and application: `Bid`, `BidHistory`, `BidderName`, `Auction` bid getters and biddable rule, `GetAuctionDetail`, `AuctionNotFoundException`. Covers criteria: 3, 4, 8, 9, 10 (domain part).
-2. Backend persistence and web: `AuctionRepository.findById` with a Testcontainers test, the empty `BidRepository` adapter, `GET /api/auctions/{id}`, 404 and 400 ProblemDetail, public access, conditional `place-bid` link, `AuctionResponse` built from `AuctionDetail`. Covers criteria: 1, 2, 3, 7, 8.
+1. Done. Backend domain and application: `Bid`, `BidHistory`, `BidderName`, `Auction` bid getters and biddable rule, `GetAuctionDetail`, `AuctionNotFoundException`, and `AuctionRepository.findById` with a Testcontainers test (the port change needs the adapter). Covers criteria: 3, 4, 8, 9, 10 (domain part).
+2. Backend web: the empty `BidRepository` adapter, `GET /api/auctions/{id}`, 404 and 400 ProblemDetail, public access, conditional `place-bid` link, `AuctionResponse` built from `AuctionDetail`. Covers criteria: 1, 2, 3, 7, 8.
 3. Frontend: route, `AuctionDetailView`, components, loading, not-found and error states, time left, bid panel slot. Covers criteria: 5, 6, 8.
 
 ## Decisions
