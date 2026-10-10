@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('../features/auction/views/AuctionsView.vue'),
     },
     {
+      path: '/auctions/new',
+      name: 'auctions-new',
+      component: () => import('../features/auction/views/CreateAuctionView.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       // route level code-splitting
