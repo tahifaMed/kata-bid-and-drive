@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +38,8 @@ class AuctionPersistenceTests {
 	@Test
 	void saving_an_auction_stores_one_auction_row_and_its_car() {
 		int auctionsBefore = countAuctions();
-		Instant now = Instant.now();
+		// TIMESTAMPTZ stores microseconds; Linux clocks can give nanoseconds.
+		Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 		Car car = new Car("Volkswagen", "Golf", 2020, 42000, "Blue, one owner", "https://example.com/golf.jpg");
 		Auction auction = Auction.open(new UserId(1), car, new BigDecimal("12000.00"), new BigDecimal("100.00"),
 				now.plus(Duration.ofDays(2)), now, WINDOW);
