@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: bidanddrive
+      POSTGRES_USER: bidanddrive
+      POSTGRES_PASSWORD: bidanddrive
+    ports:
+      # Loopback only: dev credentials must not be reachable from the network
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Postgres 18+ expects the mount at /var/lib/postgresql (not .../data)
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bidanddrive -d bidanddrive"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/bidanddrive
+      DB_USERNAME: bidanddrive
+      DB_PASSWORD: bidanddrive
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:

@@ -4,7 +4,9 @@ Root rules in `../CLAUDE.md` also apply.
 
 ## Commands
 - Build and test everything: `./mvnw verify`
-- Run the app: `./mvnw spring-boot:run` (H2 in-memory, console at `/h2-console` once enabled)
+- Start Postgres: `docker compose up -d postgres` (from the repo root)
+- Run the app locally: `SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run`. The `local` profile supplies the dev DB defaults.
+- Any other run needs `DB_URL`, `DB_USERNAME` and `DB_PASSWORD` set. The app refuses to start without them.
 - One test class: `./mvnw -Dtest=ClassName test`
 
 ## Layout
