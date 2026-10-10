@@ -194,4 +194,17 @@ describe('BidPanel', () => {
     useIdentityStore().setUser(1)
     expect(await screen.findByText('You are the seller of this auction.')).toBeTruthy()
   })
+
+  it('does not show a bid result to a user who switched in while it was on its way', async () => {
+    let respond: (response: Response) => void = () => {}
+    vi.stubGlobal('fetch', () => new Promise<Response>((resolve) => (respond = resolve)))
+    const { emitted } = renderPanel()
+
+    await bid('12000.00')
+    useIdentityStore().setUser(3)
+    respond(new Response(JSON.stringify(BID), { status: 201 }))
+
+    await vi.waitFor(() => expect(emitted('placed')).toHaveLength(1))
+    expect(screen.queryByText('Your bid of USD 12,000.00 was placed.')).toBeNull()
+  })
 })

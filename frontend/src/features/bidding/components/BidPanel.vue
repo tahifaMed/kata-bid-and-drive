@@ -76,16 +76,23 @@ async function onSubmit(): Promise<void> {
   if (!canSubmit.value || !href) return
   submitting.value = true
   outcome.value = null
+  // The result belongs to the user who sent the bid, not to one switched in while it was on its way.
+  const bidder = identity.currentUserId
+  const stillSameUser = () => identity.currentUserId === bidder
   try {
     const bid = await placeBid(href, amount.value)
     amount.value = ''
-    outcome.value = {
-      kind: 'placed',
-      text: `Your bid of ${formatCurrency(bid.amount)} was placed.`,
+    if (stillSameUser()) {
+      outcome.value = {
+        kind: 'placed',
+        text: `Your bid of ${formatCurrency(bid.amount)} was placed.`,
+      }
     }
     emit('placed')
   } catch (error) {
-    outcome.value = { kind: 'failed', text: failureText(error) }
+    if (stillSameUser()) {
+      outcome.value = { kind: 'failed', text: failureText(error) }
+    }
     // The auction moved on (closed, outbid, higher minimum), so the page fetches it again.
     if (error instanceof ApiError && (error.status === 409 || error.status === 422)) {
       emit('placed')
