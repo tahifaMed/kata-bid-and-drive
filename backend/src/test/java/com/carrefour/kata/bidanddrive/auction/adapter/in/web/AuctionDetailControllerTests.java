@@ -23,11 +23,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -143,9 +146,26 @@ class AuctionDetailControllerTests {
 	void an_id_that_is_not_a_64_bit_whole_number_is_a_400_naming_id(String id) throws Exception {
 		mockMvc.perform(get("/api/auctions/" + id))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.errors[0].field").value("id"));
+				.andExpect(jsonPath("$.title").value("Invalid auction"))
+				.andExpect(jsonPath("$.errors.length()").value(1))
+				.andExpect(jsonPath("$.errors[0].field").value("id"))
+				.andExpect(jsonPath("$.errors[0].message").value("must be a whole number"));
 
 		verifyNoInteractions(getAuctionDetail);
+	}
+
+	@Test
+	void broken_data_is_a_500_problem_that_hides_the_cause() throws Exception {
+		given(getAuctionDetail.execute(5)).willThrow(new IllegalStateException("user 42 does not exist"));
+
+		mockMvc.perform(get("/api/auctions/5"))
+				.andExpect(status().isInternalServerError())
+				.andExpect(jsonPath("$.status").value(500))
+				.andExpect(jsonPath("$.title").value("Internal error"))
+				.andExpect(jsonPath("$.detail").value("The request could not be completed"))
+				.andExpect(jsonPath("$.trace").doesNotExist())
+				.andExpect(jsonPath("$.exception").doesNotExist())
+				.andExpect(content().string(not(containsString("user 42"))));
 	}
 
 	@ParameterizedTest
