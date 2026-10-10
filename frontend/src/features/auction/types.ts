@@ -1,20 +1,19 @@
-export interface PhotoCredit {
-  author: string
-  license: string
-  url: string
+/** One open auction in the list (spec 005). Money is a string (ADR 0004). */
+export interface AuctionListItem {
+  id: number
+  car: { make: string; model: string; year: number; imageUrl: string | null }
+  currentBid: string
+  minNextBid: string
+  bidCount: number
+  endsAt: string
+  _links: Record<string, { href: string }>
 }
 
-export interface AuctionListing {
-  id: string
-  title: string
-  specs: string
-  location: string
-  timeLeft: string
-  currentBid: number
-  noReserve: boolean
-  image: string
-  imageAlt: string
-  credit: PhotoCredit
+/** A HAL page of open auctions. `next` and `prev` links exist only when those pages do. */
+export interface AuctionListPage {
+  _embedded: { auctions: AuctionListItem[] }
+  page: { size: number; number: number }
+  _links: Record<string, { href: string }>
 }
 
 /** Mirrors the backend create request (spec 004). Money is a string (ADR 0004). */
