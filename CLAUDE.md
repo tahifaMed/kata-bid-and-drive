@@ -7,7 +7,7 @@ Spec-first: every feature starts as a numbered spec in `docs/specs/`. The spec i
 - Backend: Java 25, Spring Boot 4.0.x (`backend/`, see `backend/CLAUDE.md`)
 - Frontend: Vue 3 + TypeScript + Vite + Pinia + Vue Router (`frontend/`, see `frontend/CLAUDE.md`)
 - Persistence: PostgreSQL, Flyway migrations
-- Packaging and CI/CD: not in scope yet
+- Deploy: Railway. `deploy/railway.sh` bootstraps the project once; `.github/workflows/deploy.yml` deploys `main` on every push (ADR 0012).
 
 ## Commands
 - Backend: `cd backend && ./mvnw verify`
