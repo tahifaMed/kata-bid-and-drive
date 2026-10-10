@@ -41,7 +41,11 @@ Given / When / Then. Each criterion maps to at least one test.
 10. Bid panel (component tests with Vitest):
     - When the amount is empty, malformed or below the minimum, the submit button is disabled and the minimum (`minNextBid`) is shown.
     - On 201, the input is cleared, a confirmation is shown and `placed` is emitted.
-    - On 409 or 422, the ProblemDetail's `detail` is shown and `placed` is emitted so the page refetches.
+    - On 409 or 422, a message from the ProblemDetail is shown and `placed` is emitted so the page refetches:
+      - 422: "Your bid must be at least" plus `minimumBid`, formatted.
+      - Version conflict: "Another bid was placed first. Check the new minimum and try again."
+      - Any other 409: `detail`.
+    - A result that arrives after the user switched is not shown to the new user.
     - On 400, the `errors[].message` is shown.
     - On 401, 403 or a network failure, a generic message is shown and `placed` is not emitted.
     - When the viewer is the seller, the panel shows "You are the seller" instead of the form.
