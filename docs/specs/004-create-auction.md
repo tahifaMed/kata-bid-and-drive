@@ -40,7 +40,7 @@ Given / When / Then. Each criterion maps to at least one test.
 
 ## UI (frontend)
 - Route `/auctions/new` (lazy `CreateAuctionView`) in `src/features/auction/`.
-- Component `src/features/auction/components/AuctionForm.vue`, using client-side checks that mirror the server rules. The browser clock is used only for the endsAt hint. The server is authoritative, and its 400 is shown per field.
+- Component `src/features/auction/components/AuctionForm.vue`, using client-side checks that mirror the server rules. The browser clock is used only for the endsAt hint. The server is authoritative. Its 400 is shown as the generic message in criterion 8, because the shared client does not expose the error body.
 - The "Sell a car" button on `AuctionsView` becomes a `RouterLink` to `/auctions/new`.
 - No Pinia store. The form keeps its own state.
 - The confirmation link points at `/auctions/{id}`. That route is added by 006. Until 006 lands the link leads to the router's not-found handling; the test checks only the href.
