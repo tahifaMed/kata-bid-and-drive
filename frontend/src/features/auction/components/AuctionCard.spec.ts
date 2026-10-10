@@ -1,53 +1,53 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/vue'
+import { afterEach, describe, expect, it } from 'vitest'
 import AuctionCard from './AuctionCard.vue'
 import type { AuctionListing } from '../types'
 
 const listing: AuctionListing = {
   id: 'test-car',
-  title: '2017 Porsche 911 Carrera Coupe',
-  specs: '15k miles, 7-speed manual, twin-turbo flat-six',
+  title: '2013 Porsche 911 Carrera 4S',
+  specs: '15k miles, 7-speed manual, naturally aspirated flat-six',
   location: 'Carmichael, CA',
   timeLeft: '2 days',
   currentBid: 81500,
   noReserve: false,
   image: '/images/auctions/test-car.jpg',
-  imageAlt: 'Grey Porsche 911 Carrera coupe, three-quarter front view',
+  imageAlt: '2013 Porsche 911 Carrera 4S coupe, front three-quarter view',
   credit: { author: 'Test Author', license: 'CC BY-SA 4.0', url: 'https://example.com' },
 }
 
+afterEach(() => cleanup())
+
 describe('AuctionCard', () => {
   it('shows the title, specs and location', () => {
-    const wrapper = mount(AuctionCard, { props: { listing } })
+    render(AuctionCard, { props: { listing } })
 
-    expect(wrapper.find('.auction-card-title').text()).toBe(listing.title)
-    expect(wrapper.find('.auction-card-spec').text()).toBe(listing.specs)
-    expect(wrapper.find('.auction-card-meta').text()).toBe(listing.location)
+    // getBy* throws when the element is missing, so these also assert presence
+    expect(screen.getByRole('heading', { name: listing.title })).toBeTruthy()
+    expect(screen.getByText(listing.specs)).toBeTruthy()
+    expect(screen.getByText(listing.location)).toBeTruthy()
   })
 
-  it('shows the time left and the current bid in US dollars', () => {
-    const wrapper = mount(AuctionCard, { props: { listing } })
-    const chip = wrapper.find('.image-chip').text()
+  it('shows the time left and the current bid with a currency code and two decimals', () => {
+    render(AuctionCard, { props: { listing } })
 
-    expect(chip).toContain('2 days')
-    expect(chip).toContain('$81,500')
+    expect(screen.getByText('2 days')).toBeTruthy()
+    expect(screen.getByText(/USD\s81,500\.00/)).toBeTruthy()
   })
 
   it('shows the no reserve badge only when the auction has no reserve', () => {
-    expect(mount(AuctionCard, { props: { listing } }).find('.badge-info').exists()).toBe(false)
+    const { unmount } = render(AuctionCard, { props: { listing } })
+    expect(screen.queryByText('No reserve')).toBeNull()
+    unmount()
 
-    const noReserve = { ...listing, noReserve: true }
-    expect(
-      mount(AuctionCard, { props: { listing: noReserve } })
-        .find('.badge-info')
-        .text(),
-    ).toBe('No reserve')
+    render(AuctionCard, { props: { listing: { ...listing, noReserve: true } } })
+    expect(screen.getByText('No reserve')).toBeTruthy()
   })
 
-  it('uses the photo with its alt text', () => {
-    const img = mount(AuctionCard, { props: { listing } }).find('img')
+  it('shows the photo with its alt text', () => {
+    render(AuctionCard, { props: { listing } })
 
-    expect(img.attributes('src')).toBe(listing.image)
-    expect(img.attributes('alt')).toBe(listing.imageAlt)
+    const img = screen.getByRole('img', { name: listing.imageAlt })
+    expect(img.getAttribute('src')).toBe(listing.image)
   })
 })
