@@ -1,35 +1,203 @@
-@import './base.css';
+/*
+ * BidAndDrive design system.
+ *
+ * Visual reference: car auction listing pages (grid of 3:2 photos, bold title,
+ * spec lines, muted location, time and bid overlaid on the photo). We take the
+ * patterns only. Colours, logo and copy are our own.
+ *
+ * Layers: tokens (@theme) -> base -> components (@layer) -> primitives (@utility).
+ */
+@import 'tailwindcss';
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+/* ---------- Tokens ---------- */
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* Colour roles. Use roles in components, never raw hex. */
+  --color-ink: #111418;
+  --color-ink-muted: #5b6470;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f3f4f6;
+  --color-border: #d9dde3;
+  --color-border-strong: #111418;
+
+  --color-accent: #0f766e;
+  --color-accent-hover: #0c5f58;
+  --color-accent-contrast: #ffffff;
+
+  --color-info: #1d4ed8;
+  --color-info-soft: #e8efff;
+  --color-success: #15803d;
+  --color-danger: #b91c1c;
+
+  --color-overlay: rgb(17 20 24 / 0.86);
+  --color-focus: #0f766e;
+
+  /* Type scale */
+  --text-display: 1.75rem;
+  --text-display--line-height: 2.25rem;
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.35rem;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5rem;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.25rem;
+  --text-badge: 0.75rem;
+  --text-badge--line-height: 1rem;
+
+  /* Shape */
+  --radius-card: 0.5rem;
+  --radius-field: 999px;
+
+  /* Layout */
+  --container-app: 100rem;
+  --gutter-app: clamp(1rem, 3vw, 3rem);
+  --gap-grid: 1.5rem;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+/* ---------- Base ---------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
   }
-}
 
-@media (min-width: 1024px) {
   body {
-    display: flex;
-    place-items: center;
+    @apply bg-surface font-sans text-body text-ink antialiased;
   }
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+  img,
+  svg,
+  video {
+    @apply max-w-full;
   }
+
+  a {
+    @apply text-ink underline-offset-4 hover:underline;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-focus;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}
+
+/* ---------- Components ---------- */
+@layer components {
+  /* Buttons: pill shape, 44px minimum touch height */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5
+      text-body font-semibold no-underline transition-colors
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-accent-contrast hover:bg-accent-hover hover:no-underline;
+  }
+
+  .btn-outline {
+    @apply border border-border bg-surface text-ink hover:border-border-strong hover:no-underline;
+  }
+
+  /* Form fields */
+  .field {
+    @apply flex min-h-11 w-full items-center gap-2 rounded-field border border-border
+      bg-surface-subtle px-4 text-body text-ink placeholder:text-ink-muted;
+  }
+
+  /* Status badge, e.g. "No reserve" */
+  .badge-info {
+    @apply inline-flex items-center rounded-field bg-info-soft px-2 py-0.5
+      text-badge font-bold tracking-wide text-info uppercase;
+  }
+
+  /* Overlay chip on a photo: time left and current bid */
+  .image-chip {
+    @apply inline-flex items-center gap-2 rounded-md bg-overlay px-2.5 py-1
+      text-meta font-semibold text-white;
+  }
+
+  /* Underlined sort tabs */
+  .tab {
+    @apply border-b-2 border-transparent pb-1 text-meta text-ink-muted no-underline
+      hover:text-ink;
+  }
+
+  .tab-active {
+    @apply border-ink font-semibold text-ink;
+  }
+
+  /* Auction card */
+  .auction-card {
+    @apply flex flex-col gap-2 text-ink no-underline;
+  }
+
+  .auction-card-media {
+    @apply relative aspect-3/2 w-full overflow-hidden rounded-card bg-surface-subtle;
+  }
+
+  .auction-card-media > img {
+    @apply h-full w-full object-cover;
+  }
+
+  .auction-card-title {
+    @apply text-title font-bold text-ink;
+  }
+
+  .auction-card-spec {
+    @apply text-body text-ink;
+  }
+
+  .auction-card-meta {
+    @apply text-meta text-ink-muted;
+  }
+
+  /* Status text */
+  .status-winning {
+    @apply font-semibold text-success;
+  }
+
+  .status-outbid {
+    @apply font-semibold text-danger;
+  }
+}
+
+/* ---------- Responsive primitives ---------- */
+@utility container-app {
+  @apply mx-auto w-full px-(--gutter-app);
+  max-width: var(--container-app);
+}
+
+/* One column on phones, 2 from 40rem, 3 from 64rem, 4 from 80rem */
+@utility auction-grid {
+  display: grid;
+  gap: var(--gap-grid);
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (width >= 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Vertical rhythm between stacked sections */
+@utility stack-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
