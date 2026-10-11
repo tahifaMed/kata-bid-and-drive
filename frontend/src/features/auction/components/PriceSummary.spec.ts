@@ -28,6 +28,34 @@ describe('PriceSummary', () => {
     expect(screen.getByText('3h 12m')).toBeTruthy()
   })
 
+  it('shows the final price and no minimum once a closed auction is sold', () => {
+    const auction = auctionDetail({
+      status: 'CLOSED',
+      outcome: 'SOLD',
+      winnerName: 'B***',
+      currentBid: '12600.00',
+      minNextBid: '12700.00',
+      bidCount: 3,
+      endsAt: ENDS_AT,
+    })
+    render(PriceSummary, { props: { auction, now: Date.parse(ENDS_AT) } })
+
+    expect(screen.getByText('Final price')).toBeTruthy()
+    expect(screen.getByText(/USD\s12,600\.00/)).toBeTruthy()
+    expect(screen.queryByText('Minimum next bid')).toBeNull()
+    expect(screen.queryByText(/USD\s12,700\.00/)).toBeNull()
+    expect(screen.queryByText('Current bid')).toBeNull()
+  })
+
+  it('keeps the starting price label when a closed auction had no bids', () => {
+    const auction = auctionDetail({ status: 'CLOSED', outcome: 'NO_BIDS', endsAt: ENDS_AT })
+    render(PriceSummary, { props: { auction, now: Date.parse(ENDS_AT) } })
+
+    expect(screen.getByText('Starting price')).toBeTruthy()
+    expect(screen.queryByText('Final price')).toBeNull()
+    expect(screen.queryByText('Minimum next bid')).toBeNull()
+  })
+
   it('says ended once the end time has passed', () => {
     render(PriceSummary, {
       props: { auction: auctionDetail({ endsAt: ENDS_AT }), now: Date.parse(ENDS_AT) },

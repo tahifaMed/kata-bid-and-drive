@@ -92,9 +92,21 @@ public record Auction(
 		return new BidPlacement(updated, new Bid(null, id, bidder, amount, now));
 	}
 
-	/** Open and not yet ended. The stored status does not change at the end time; auto-close is spec 011. */
+	/** Closed from {@code endsAt} on. The stored status stays OPEN; the phase is derived on read (ADR 0016). */
+	public AuctionPhase phaseAt(Instant now) {
+		return endsAt.isAfter(now) ? AuctionPhase.OPEN : AuctionPhase.CLOSED;
+	}
+
 	public boolean isBiddableAt(Instant now) {
-		return status == AuctionStatus.OPEN && endsAt.isAfter(now);
+		return phaseAt(now) == AuctionPhase.OPEN;
+	}
+
+	/** Empty while open. Once closed, SOLD to the highest bidder at {@code currentBid}, or NO_BIDS. */
+	public Optional<AuctionOutcome> outcomeAt(Instant now) {
+		if (phaseAt(now) == AuctionPhase.OPEN) {
+			return Optional.empty();
+		}
+		return Optional.of(bidCount == 0 ? AuctionOutcome.NO_BIDS : AuctionOutcome.SOLD);
 	}
 
 	private static void checkYear(int year, Instant now) {

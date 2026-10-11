@@ -57,7 +57,7 @@ class BidderStandingPersistenceTests {
 		assertThat(standings).extracting(standing -> standing.auction().id()).containsExactly(outbid, winning);
 		assertThat(standings).extracting(BidderStanding::myHighestBid)
 				.containsExactly(money("900.00"), money("1200.00"));
-		assertThat(standings).extracting(BidderStanding::status)
+		assertThat(standings).extracting(standing -> standing.status(now))
 				.containsExactly(BidderStatus.OUTBID, BidderStatus.WINNING);
 		assertThat(standings.getFirst().auction().currentBid()).isEqualTo(money("1000.00"));
 		assertThat(standings.getFirst().auction().car().make()).isEqualTo("Fiat");
@@ -74,7 +74,7 @@ class BidderStandingPersistenceTests {
 
 		assertThat(standings).hasSize(1);
 		assertThat(standings.getFirst().myHighestBid()).isEqualTo(money("1200.00"));
-		assertThat(standings.getFirst().status()).isEqualTo(BidderStatus.WINNING);
+		assertThat(standings.getFirst().status(now)).isEqualTo(BidderStatus.WINNING);
 	}
 
 	@Test
@@ -114,8 +114,8 @@ class BidderStandingPersistenceTests {
 
 		BidderStanding bobs = bids.findStanding(id, BOB).orElseThrow();
 		assertThat(bobs.myHighestBid()).isEqualTo(money("1000.00"));
-		assertThat(bobs.status()).isEqualTo(BidderStatus.OUTBID);
-		assertThat(bids.findStanding(id, DAN).orElseThrow().status()).isEqualTo(BidderStatus.WINNING);
+		assertThat(bobs.status(now)).isEqualTo(BidderStatus.OUTBID);
+		assertThat(bids.findStanding(id, DAN).orElseThrow().status(now)).isEqualTo(BidderStatus.WINNING);
 		assertThat(bids.findStanding(id, CHLOE)).isEmpty();
 		assertThat(bids.findStanding(newAuction(now.plus(Duration.ofDays(1))), BOB)).isEmpty();
 	}

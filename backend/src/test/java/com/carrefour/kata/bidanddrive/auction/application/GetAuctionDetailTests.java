@@ -1,9 +1,12 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionOutcome;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionPhase;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
 import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
@@ -124,7 +127,10 @@ class GetAuctionDetailTests {
 		BidderStanding bobs = new BidderStanding(auction, BOB, money("12000.00"));
 		standingsOnFive.put(BOB, bobs);
 
-		assertThat(getAuctionDetail.execute(5, BOB).myBid()).isEqualTo(bobs);
+		AuctionDetail detail = getAuctionDetail.execute(5, BOB);
+
+		assertThat(detail.myBid()).isEqualTo(bobs);
+		assertThat(detail.myBidStatus()).isEqualTo(BidderStatus.OUTBID);
 	}
 
 	@Test
@@ -146,6 +152,7 @@ class GetAuctionDetailTests {
 		auctions.add(auction(5, NOW.plusSeconds(3600)));
 
 		assertThat(getAuctionDetail.execute(5, CAROL).myBid()).isNull();
+		assertThat(getAuctionDetail.execute(5, CAROL).myBidStatus()).isNull();
 		assertThat(getAuctionDetail.execute(5).myBid()).isNull();
 	}
 
@@ -160,17 +167,50 @@ class GetAuctionDetailTests {
 	void an_auction_that_ends_later_is_biddable() {
 		auctions.add(auction(5, NOW.plusSeconds(1)));
 
-		assertThat(getAuctionDetail.execute(5).biddable()).isTrue();
+		AuctionDetail detail = getAuctionDetail.execute(5);
+
+		assertThat(detail.phase()).isEqualTo(AuctionPhase.OPEN);
+		assertThat(detail.outcome()).isNull();
+		assertThat(detail.winnerName()).isNull();
 	}
 
 	@Test
-	void an_auction_that_ends_now_is_not_biddable_and_keeps_its_stored_status() {
+	void an_auction_that_ends_now_is_closed_with_no_bids_and_keeps_its_stored_status() {
 		auctions.add(auction(5, NOW));
 
 		AuctionDetail detail = getAuctionDetail.execute(5);
 
-		assertThat(detail.biddable()).isFalse();
+		assertThat(detail.phase()).isEqualTo(AuctionPhase.CLOSED);
+		assertThat(detail.outcome()).isEqualTo(AuctionOutcome.NO_BIDS);
+		assertThat(detail.winnerName()).isNull();
 		assertThat(detail.auction().status()).isEqualTo(AuctionStatus.OPEN);
+	}
+
+	@Test
+	void an_ended_auction_with_bids_is_sold_to_the_masked_highest_bidder() {
+		auctions.add(new Auction(5L, ALICE, car(), money("12000.00"), money("100.00"), NOW,
+				AuctionStatus.OPEN, money("12100.00"), CAROL, 2, 2));
+		bids.put(5L, List.of(
+				bid(1, BOB, "12000.00", NOW.minusSeconds(20)),
+				bid(2, CAROL, "12100.00", NOW.minusSeconds(10))));
+
+		AuctionDetail detail = getAuctionDetail.execute(5);
+
+		assertThat(detail.phase()).isEqualTo(AuctionPhase.CLOSED);
+		assertThat(detail.outcome()).isEqualTo(AuctionOutcome.SOLD);
+		assertThat(detail.winnerName()).isEqualTo("C***");
+	}
+
+	@Test
+	void the_viewers_status_is_computed_at_the_same_instant_as_the_phase() {
+		Auction ended = new Auction(5L, ALICE, car(), money("12000.00"), money("100.00"), NOW,
+				AuctionStatus.OPEN, money("12100.00"), CAROL, 2, 2);
+		auctions.add(ended);
+		standingsOnFive.put(BOB, new BidderStanding(ended, BOB, money("12000.00")));
+		standingsOnFive.put(CAROL, new BidderStanding(ended, CAROL, money("12100.00")));
+
+		assertThat(getAuctionDetail.execute(5, BOB).myBidStatus()).isEqualTo(BidderStatus.LOST);
+		assertThat(getAuctionDetail.execute(5, CAROL).myBidStatus()).isEqualTo(BidderStatus.WON);
 	}
 
 	@Test

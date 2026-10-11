@@ -1,6 +1,7 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionOutcome;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
 import com.carrefour.kata.bidanddrive.auction.domain.BidHistory;
 import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
@@ -10,6 +11,7 @@ import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +48,10 @@ public class GetAuctionDetail {
 		return detailOf(auctions.findById(id).orElseThrow(() -> new AuctionNotFoundException(id)), null);
 	}
 
+	/** Everything time-dependent is computed at one instant, so status, outcome and myBid agree (spec 011). */
 	private AuctionDetail detailOf(Auction auction, BidderStanding myBid) {
 		long id = auction.id();
+		Instant now = clock.instant();
 		// The port already returns the newest bids; BidHistory keeps the order and cap whatever the adapter does.
 		List<Bid> newest = BidHistory.newest(bids.findNewest(id, BidHistory.LIMIT));
 		Map<UserId, String> maskedNames = new HashMap<>();
@@ -55,8 +59,14 @@ public class GetAuctionDetail {
 				.map(bid -> new AuctionDetail.HistoryEntry(bid.amount(), bid.placedAt(),
 						maskedNames.computeIfAbsent(bid.bidderId(), bidder -> BidderName.mask(displayName(bidder)))))
 				.toList();
-		return new AuctionDetail(auction, displayName(auction.sellerId()), history,
-				auction.isBiddableAt(clock.instant()), myBid);
+		AuctionOutcome outcome = auction.outcomeAt(now).orElse(null);
+		String winnerName = outcome == AuctionOutcome.SOLD
+				? auction.highestBidderId()
+						.map(winner -> maskedNames.computeIfAbsent(winner, w -> BidderName.mask(displayName(w))))
+						.orElseThrow()
+				: null;
+		return new AuctionDetail(auction, displayName(auction.sellerId()), history, auction.phaseAt(now),
+				outcome, winnerName, myBid, myBid == null ? null : myBid.status(now));
 	}
 
 	/** Sellers and bidders reference {@code app_user}, so a missing user means broken data. */

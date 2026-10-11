@@ -56,7 +56,7 @@ Given / When / Then. Each criterion maps to at least one test.
 ## Domain rules and edge cases
 - Minimum bid: `startingPrice` when there are no bids, otherwise `currentBid + minIncrement`. The first bid may equal `startingPrice`. Later bids must be >= the minimum.
 - Bids are immutable. A bidder cannot withdraw or change a bid.
-- "Closed" means the auction is not biddable: `Auction.isBiddableAt(now)` is false (`status` is not `OPEN`, or `endsAt <= now`). `placeBid` reuses that method, so 011 needs no change here.
+- "Closed" means the auction is not biddable: `Auction.isBiddableAt(now)` is false, that is `endsAt <= now`. Since 011 it delegates to `Auction.phaseAt(now)`, the rule every read uses.
 - The seller cannot bid on their own auction. This is an ownership rule, not a role ([ADR 0006](../adr/0006-bidding-rules.md)).
 - A bidder who is already the highest bidder cannot bid again ([ADR 0006](../adr/0006-bidding-rules.md)).
 - Check order when several rules apply: identity (401), auction exists (404), body valid (400), seller (403), closed (409), already highest (409), minimum (422), version conflict (409). See [ADR 0005](../adr/0005-bid-error-mapping.md).

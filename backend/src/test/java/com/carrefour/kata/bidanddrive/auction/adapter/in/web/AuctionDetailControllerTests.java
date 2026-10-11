@@ -6,8 +6,11 @@ import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
 import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionOutcome;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionPhase;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
@@ -60,7 +63,7 @@ class AuctionDetailControllerTests {
 
 	@Test
 	void shows_the_car_prices_seller_status_and_links() throws Exception {
-		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
+		given(getAuctionDetail.execute(5)).willReturn(AuctionDetail.open(auction(), "Alice", List.of()));
 
 		mockMvc.perform(get("/api/auctions/5"))
 				.andExpect(status().isOk())
@@ -84,7 +87,7 @@ class AuctionDetailControllerTests {
 
 	@Test
 	void with_no_bids_the_prices_are_the_starting_price_and_the_history_is_empty() throws Exception {
-		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
+		given(getAuctionDetail.execute(5)).willReturn(AuctionDetail.open(auction(), "Alice", List.of()));
 
 		mockMvc.perform(get("/api/auctions/5"))
 				.andExpect(status().isOk())
@@ -101,7 +104,7 @@ class AuctionDetailControllerTests {
 				entry("12200.00", "2026-10-11T10:02:00Z", "B***"),
 				entry("12100.00", "2026-10-11T10:01:00Z", "C***"),
 				entry("12000.00", "2026-10-11T10:00:00Z", "B***"));
-		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", bids, true));
+		given(getAuctionDetail.execute(5)).willReturn(AuctionDetail.open(auction(), "Alice", bids));
 
 		mockMvc.perform(get("/api/auctions/5"))
 				.andExpect(status().isOk())
@@ -115,14 +118,46 @@ class AuctionDetailControllerTests {
 	}
 
 	@Test
-	void an_auction_that_is_not_biddable_has_no_place_bid_link_and_keeps_its_status() throws Exception {
-		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), false));
+	void a_closed_auction_with_no_bids_has_its_outcome_and_no_place_bid_link() throws Exception {
+		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(),
+				AuctionPhase.CLOSED, AuctionOutcome.NO_BIDS, null, null, null));
 
 		mockMvc.perform(get("/api/auctions/5"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.status").value("OPEN"))
+				.andExpect(jsonPath("$.status").value("CLOSED"))
+				.andExpect(jsonPath("$.outcome").value("NO_BIDS"))
+				.andExpect(jsonPath("$", not(hasKey("winnerName"))))
+				.andExpect(jsonPath("$.highestBidderId").value(nullValue()))
+				.andExpect(jsonPath("$.currentBid").value("12000.00"))
 				.andExpect(jsonPath("$._links.self.href").value(endsWith("/api/auctions/5")))
 				.andExpect(jsonPath("$._links.place-bid").doesNotExist());
+	}
+
+	@Test
+	void a_sold_auction_shows_the_masked_winner_and_final_price() throws Exception {
+		Auction sold = new Auction(5L, new UserId(1), auction().car(), money("12000.00"), money("100.00"), ENDS_AT,
+				AuctionStatus.OPEN, money("12200.00"), new UserId(3), 3, 3);
+		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(sold, "Alice", List.of(),
+				AuctionPhase.CLOSED, AuctionOutcome.SOLD, "C***", null, null));
+
+		mockMvc.perform(get("/api/auctions/5"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("CLOSED"))
+				.andExpect(jsonPath("$.outcome").value("SOLD"))
+				.andExpect(jsonPath("$.winnerName").value("C***"))
+				.andExpect(jsonPath("$.highestBidderId").value(3))
+				.andExpect(jsonPath("$.currentBid").value("12200.00"))
+				.andExpect(jsonPath("$._links.place-bid").doesNotExist());
+	}
+
+	@Test
+	void an_open_auction_omits_outcome_and_winner() throws Exception {
+		given(getAuctionDetail.execute(5)).willReturn(AuctionDetail.open(auction(), "Alice", List.of()));
+
+		mockMvc.perform(get("/api/auctions/5"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", not(hasKey("outcome"))))
+				.andExpect(jsonPath("$", not(hasKey("winnerName"))));
 	}
 
 	@Test
@@ -176,7 +211,7 @@ class AuctionDetailControllerTests {
 	@ParameterizedTest
 	@ValueSource(strings = {"999", "not-a-number"})
 	void the_detail_is_public_and_ignores_an_unknown_or_malformed_identity(String identity) throws Exception {
-		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
+		given(getAuctionDetail.execute(5)).willReturn(AuctionDetail.open(auction(), "Alice", List.of()));
 
 		mockMvc.perform(get("/api/auctions/5"))
 				.andExpect(status().isOk())
@@ -191,8 +226,8 @@ class AuctionDetailControllerTests {
 		UserId bob = new UserId(2);
 		given(users.findById(bob)).willReturn(Optional.of(new User(bob, "Bob")));
 		Auction auction = auction();
-		given(getAuctionDetail.execute(5, bob)).willReturn(new AuctionDetail(auction, "Alice", List.of(), true,
-				new BidderStanding(auction, bob, money("12000.00"))));
+		given(getAuctionDetail.execute(5, bob)).willReturn(new AuctionDetail(auction, "Alice", List.of(),
+				AuctionPhase.OPEN, null, null, new BidderStanding(auction, bob, money("12000.00")), BidderStatus.OUTBID));
 
 		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", "2"))
 				.andExpect(status().isOk())
@@ -204,7 +239,7 @@ class AuctionDetailControllerTests {
 	void a_known_user_without_a_bid_gets_no_my_bid() throws Exception {
 		UserId chloe = new UserId(3);
 		given(users.findById(chloe)).willReturn(Optional.of(new User(chloe, "Chloe")));
-		given(getAuctionDetail.execute(5, chloe)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
+		given(getAuctionDetail.execute(5, chloe)).willReturn(AuctionDetail.open(auction(), "Alice", List.of()));
 
 		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", "3"))
 				.andExpect(status().isOk())

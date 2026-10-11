@@ -30,7 +30,7 @@ Given / When / Then. Each criterion maps to at least one test.
 - The seller and the bidders are foreign keys to `app_user`, so they always exist. If the `UserDirectory` lookup still finds none, the use case throws `IllegalStateException`, which gives a 500 without a stack trace in the body.
 - The bid history is the 50 newest bids, sorted by `placedAt` descending, then by bid id descending. Full history is out of scope.
 - `currentBid`, `bidCount` and `highestBidderId` come from the `Auction`, not from the bid history. In 006 they are the starting price, 0 and null, because no bids are stored. 007 stores them on the auction row and changes these methods, together with `minNextBid` (`currentBid + minIncrement` once a bid exists, [ADR 0006](../adr/0006-bidding-rules.md)).
-- "Biddable" means `status = OPEN` and `endsAt > now` (injected `Clock`), the same rule as the 005 list. The `place-bid` link is present only when biddable. The stored `status` is returned unchanged; auto-close is 011.
+- "Biddable" means `status = OPEN` and `endsAt > now` (injected `Clock`), the same rule as the 005 list. The `place-bid` link is present only when biddable. 011 replaces the stored `status` in the response with the derived phase (`OPEN` or `CLOSED`).
 - Money is a JSON string with two decimals ([ADR 0004](../adr/0004-money-as-json-string.md)).
 - Time left on the page uses the 005 format (`2d 4h`, `3h 12m`, `12m`, `Ending`), and `Ended` once `endsAt` has passed.
 
@@ -61,7 +61,7 @@ Implementation shape:
 ## Decisions
 - The detail returns `highestBidderId` so that the live page can detect outbidding without another call. It is an id, not a name.
 - Masking is a kata privacy choice, recorded here.
-- An ended auction that is still `OPEN` in storage is returned with its stored status and without `place-bid`. No `ENDED` value is added before 011. ADR 0010 now says "a biddable auction always has `place-bid`".
+- An ended auction that is still `OPEN` in storage is returned with its stored status and without `place-bid`. Since 011 it is returned as `CLOSED`, with its outcome. ADR 0010 now says "a biddable auction always has `place-bid`".
 - The bid totals belong to the `Auction` (007, ADR 0003). The bid history only feeds the `bids` list. One source of truth for the totals.
 - Bids are read through a port that returns none until 007, like the 005 list.
 - A path variable error in the ADR 0011 shape uses the parameter name as `field` (`id`), as 005 does for query parameters.

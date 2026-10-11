@@ -1,6 +1,6 @@
 # 0015: SSE event delivery
 
-Status: Accepted
+Status: Accepted. The 011 notes below are superseded by [ADR 0016](0016-auction-result-on-read.md): there is no `auction-closed` event and no scheduled closer.
 
 ## Context
 ADR 0002 picks SSE and an in-memory broker that publishes after commit. Spec 009 leaves open how events look on the wire, which thread sends them, how the heartbeat runs and how 010 fills a bid history row. 006 shows bidders only as masked names, never as ids.

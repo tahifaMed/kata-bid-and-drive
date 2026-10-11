@@ -13,8 +13,8 @@ export interface BidResponse {
   _links: Record<string, { href: string }>
 }
 
-/** Where the caller stands on an auction they bid on (spec 008). WON and LOST come with spec 011. */
-export type BidderStatus = 'WINNING' | 'OUTBID'
+/** Where the caller stands on an auction they bid on: WINNING or OUTBID while open (spec 008), WON or LOST once closed (spec 011). */
+export type BidderStatus = 'WINNING' | 'OUTBID' | 'WON' | 'LOST'
 
 /** One auction the caller bid on, as `GET /api/me/bids` returns it. Money is a string (ADR 0004). */
 export interface MyBid {

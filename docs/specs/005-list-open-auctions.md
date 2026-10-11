@@ -6,7 +6,7 @@ Status: implemented, pending review
 ## Where we are
 - Merged: 001 (Postgres), 002 (design system and static page), 003 (identity and user switcher), 004 (create auction, PR #6).
 - Exists: `auction` and `car` tables (V3), `Auction` domain with status `OPEN` only, `CreateAuction` with the injected `Clock`, `AuctionResponse` (the 006 detail subset, ADR 0010), `AuctionsView` and `AuctionCard` driven by the static `sampleAuctions.ts`. `AuctionListing` still has `currentBid: number`, which ADR 0004 says this spec replaces.
-- Not yet: `bid` table (007), `GET /api/auctions/{id}` and the `/auctions/:id` route (006), reserve price (011), watch state (013).
+- Not yet: `bid` table (007), `GET /api/auctions/{id}` and the `/auctions/:id` route (006), watch state (013).
 - `spring-boot-starter-hateoas` is already in the backend pom.
 
 ## User story
@@ -24,12 +24,12 @@ Given / When / Then. Each criterion maps to at least one test.
 8. Given a card is clicked, when navigation happens, then the browser goes to `/auctions/:id`. The whole card is one link. The test checks the href (the route itself comes in 006).
 
 ## Domain rules and edge cases
-- "Open" means `status = OPEN` and `endsAt > now` (injected `Clock`). The list does not change `status`; auto-close is 011.
+- "Open" means `status = OPEN` and `endsAt > now` (injected `Clock`). The list does not change `status`. 011 keeps it that way: closing is worked out on read ([ADR 0016](../adr/0016-auction-result-on-read.md)).
 - Sort by `endsAt` ascending, then `id` ascending, so pages are stable.
 - `page` is 0-based and defaults to 0. `size` defaults to 20, minimum 1, maximum 100.
 - `currentBid` and `minNextBid` use the rule from 004 ("highest bid, or the starting price when there are no bids"). Until 007 adds bids, the list reads no bids: `currentBid` = `minNextBid` = `startingPrice`, and `bidCount` = 0. 007 changes only where the highest bid comes from. The list does not compute these values in the UI.
 - Money is a JSON string with two decimals (ADR 0004).
-- The list never contains the reserve (011), the seller, the description or the mileage.
+- The list never contains the seller, the description or the mileage.
 - The list shape is a HAL paged collection: `_embedded.auctions`, `page` metadata, `_links`. Spring HATEOAS omits `_embedded` when the page is empty by default, so the empty case must be tested explicitly (criterion 5).
 - Time left is computed on the client from `endsAt`. The server does not return a text countdown. Display format (default, see Open questions): `2d 4h` when a day or more is left, `3h 12m` when an hour or more, `12m` otherwise, `Ending` under one minute.
 - An auction that reaches its end while the page is open stays on the page until the next load. Refetching is not automatic.
@@ -61,7 +61,7 @@ Implementation shape: a `ListOpenAuctions` use case with the `Clock`, and a port
 3. Frontend: types, fetch from the API, loading, empty and error states with retry, Previous and Next buttons, new card props, placeholder image, time left, card link, sample data and images removed, tests updated. Covers criteria: 7, 8.
 
 ## Decisions
-- Open means `OPEN` and not yet ended. This keeps the list correct before the auto-close job of 011 exists.
+- Open means `OPEN` and not yet ended. The stored status stays `OPEN` after the end (ADR 0016), so the `endsAt` filter is what keeps the list correct.
 - Public listing: reads need no identity, as the marketplace is browsable by visitors. An identity header on this GET is ignored (criterion 6).
 - Invalid paging uses the ADR 0011 field-error shape. It is a field-level validation error, so no new ADR is needed.
 - Before bids exist, `currentBid` and `minNextBid` are the starting price and `bidCount` is 0. 007 extends the query, and the 004 rule stays the same.

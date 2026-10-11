@@ -1,9 +1,11 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
 import com.carrefour.kata.bidanddrive.auction.application.ListMyBids;
+import com.carrefour.kata.bidanddrive.auction.application.MyBidView;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
@@ -56,8 +58,10 @@ class MyBidsControllerTests {
 	@Test
 	void each_item_has_the_auction_car_both_amounts_status_end_and_a_link_to_the_auction() throws Exception {
 		given(listMyBids.execute(BOB)).willReturn(List.of(
-				new BidderStanding(auction(6, "2026-10-12T18:00:00Z", "1000.00", DAN), BOB, money("900.00")),
-				new BidderStanding(auction(5, "2026-10-13T18:00:00Z", "1200.00", BOB), BOB, money("1200.00"))));
+				new MyBidView(new BidderStanding(auction(6, "2026-10-12T18:00:00Z", "1000.00", DAN), BOB,
+						money("900.00")), BidderStatus.OUTBID),
+				new MyBidView(new BidderStanding(auction(5, "2026-10-13T18:00:00Z", "1200.00", BOB), BOB,
+						money("1200.00")), BidderStatus.WINNING)));
 
 		mockMvc.perform(get("/api/me/bids").header("X-User-Id", "2"))
 				.andExpect(status().isOk())
@@ -77,6 +81,19 @@ class MyBidsControllerTests {
 				.andExpect(jsonPath("$._embedded.myBids[1].currentBid").value("1200.00"))
 				.andExpect(jsonPath("$._embedded.myBids[1].status").value("WINNING"))
 				.andExpect(jsonPath("$._links.self.href").value("http://localhost/api/me/bids"));
+	}
+
+	@Test
+	void each_item_shows_the_status_it_was_given_including_won_and_lost() throws Exception {
+		given(listMyBids.execute(BOB)).willReturn(List.of(
+				new MyBidView(new BidderStanding(auction(6, "2026-10-10T18:00:00Z", "1000.00", DAN), BOB,
+						money("900.00")), BidderStatus.LOST),
+				new MyBidView(new BidderStanding(auction(5, "2026-10-10T19:00:00Z", "1200.00", BOB), BOB,
+						money("1200.00")), BidderStatus.WON)));
+
+		mockMvc.perform(get("/api/me/bids").header("X-User-Id", "2"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$._embedded.myBids[*].status").value(contains("LOST", "WON")));
 	}
 
 	@Test

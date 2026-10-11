@@ -2,8 +2,8 @@ package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 
 import com.carrefour.kata.bidanddrive.auction.application.AuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
-import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
-import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionOutcome;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionPhase;
 import com.carrefour.kata.bidanddrive.auction.domain.BidderStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
@@ -18,11 +18,12 @@ import java.util.Map;
 
 /**
  * The 006 detail shape. The 004 create response uses it too (ADR 0010).
- * {@code myBid} (spec 008) is omitted, not null, when there is no viewer standing.
+ * {@code myBid} (spec 008), {@code outcome} and {@code winnerName} (spec 011) are omitted, not null, when absent.
+ * {@code status} is the derived phase, never the stored status (ADR 0016).
  */
 public record AuctionResponse(
 		Long id,
-		AuctionStatus status,
+		AuctionPhase status,
 		CarResponse car,
 		SellerResponse seller,
 		long sellerId,
@@ -35,18 +36,20 @@ public record AuctionResponse(
 		Instant endsAt,
 		List<BidResponse> bids,
 		Map<String, Link> _links,
-		@JsonInclude(JsonInclude.Include.NON_NULL) MyBid myBid) {
+		@JsonInclude(JsonInclude.Include.NON_NULL) MyBid myBid,
+		@JsonInclude(JsonInclude.Include.NON_NULL) AuctionOutcome outcome,
+		@JsonInclude(JsonInclude.Include.NON_NULL) String winnerName) {
 
 	public static AuctionResponse of(AuctionDetail detail, URI self) {
 		Auction auction = detail.auction();
 		Map<String, Link> links = new LinkedHashMap<>();
 		links.put("self", new Link(self.toString()));
-		if (detail.biddable()) {
+		if (detail.phase() == AuctionPhase.OPEN) {
 			links.put("place-bid", new Link(self + "/bids"));
 		}
 		return new AuctionResponse(
 				auction.id(),
-				auction.status(),
+				detail.phase(),
 				CarResponse.from(auction.car()),
 				new SellerResponse(detail.sellerName()),
 				auction.sellerId().value(),
@@ -59,7 +62,9 @@ public record AuctionResponse(
 				auction.endsAt(),
 				detail.bids().stream().map(BidResponse::from).toList(),
 				links,
-				detail.myBid() == null ? null : MyBid.from(detail.myBid()));
+				detail.myBid() == null ? null : new MyBid(text(detail.myBid().myHighestBid()), detail.myBidStatus()),
+				detail.outcome(),
+				detail.winnerName());
 	}
 
 	private static String text(Money money) {
@@ -91,12 +96,7 @@ public record AuctionResponse(
 	}
 
 	/** The viewer's own position on this auction (spec 008). */
-	public record MyBid(String highestAmount, BidderStatus status) {
-
-		static MyBid from(BidderStanding standing) {
-			return new MyBid(text(standing.myHighestBid()), standing.status());
-		}
-	}
+	public record MyBid(String highestAmount, BidderStatus status) {}
 
 	public record Link(String href) {}
 

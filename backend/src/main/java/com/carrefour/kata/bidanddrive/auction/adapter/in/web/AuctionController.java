@@ -99,8 +99,8 @@ class AuctionController {
 				.map(User::displayName)
 				.orElseThrow(() -> new IllegalStateException("seller " + sellerId + " vanished mid-request"));
 		URI location = auctionUri(auction.id());
-		// A new auction has no bids and ends inside the window, so it is biddable (ADR 0010).
-		AuctionDetail detail = new AuctionDetail(auction, sellerName, List.of(), true);
+		// A new auction has no bids and ends inside the window, so it is open (ADR 0010).
+		AuctionDetail detail = AuctionDetail.open(auction, sellerName, List.of());
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.location(location)
 				.body(AuctionResponse.of(detail, location));
