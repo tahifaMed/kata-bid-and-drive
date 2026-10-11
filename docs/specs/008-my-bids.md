@@ -1,7 +1,7 @@
 # 008: My bids
 
 Branch: `feat/008-my-bids`  
-Status: in-progress
+Status: implemented, pending review
 
 ## User story
 > As a buyer, I can see the auctions I have bid on and whether I am winning or outbid, so that I know where I stand.
@@ -49,7 +49,7 @@ Given / When / Then. Each criterion maps to at least one test. Money is a two-de
 1. Done. Backend: `BidderStanding` domain type, `BidRepository` port for the caller's highest bid per auction, `ListMyBids`, `GET /api/me/bids` with HAL collection, sort, and 401 for missing, unknown or malformed identity. Covers criteria: 1, 2, 3, 4, 5, 7 (list).
 2. Done. Backend: optional identity (`@CurrentUser(required = false)`), `GetAuctionDetail.execute(id, viewer)`, additive `myBid` on `GET /api/auctions/{id}` with `@JsonInclude(NON_NULL)`. Covers criteria: 6, 7 (detail).
 3. Done. Frontend: `AppHeader` extracted and used by every view. Covers criteria: 10.
-4. Frontend: `MyBidsView`, `MyBidItem`, route, `myBid?` type. Covers criteria: 8, 9.
+4. Done. Frontend: `MyBidsView`, `MyBidItem`, route, `myBid?` type. Covers criteria: 8, 9.
 
 ## Decisions
 - Status is derived from the auction's highest bidder, not stored, so it cannot drift from the bid data.

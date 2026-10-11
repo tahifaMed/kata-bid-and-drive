@@ -26,6 +26,11 @@ const router = createRouter({
       component: () => import('../features/auction/views/AuctionDetailView.vue'),
     },
     {
+      path: '/me/bids',
+      name: 'my-bids',
+      component: () => import('../features/bidding/views/MyBidsView.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       // route level code-splitting
