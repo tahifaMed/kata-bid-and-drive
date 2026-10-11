@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -57,13 +58,15 @@ class AuctionEventsApiTests {
 	private JsonMapper json;
 
 	private long auctionId;
+	private Instant endsAt;
 
 	@BeforeEach
 	void create_a_bidder_and_an_auction() {
 		jdbc.update("INSERT INTO app_user (id, display_name) VALUES (?, 'Bob') ON CONFLICT (id) DO NOTHING", BIDDER);
+		endsAt = Instant.now().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.SECONDS);
 		auctionId = auctions.save(new Auction(null, new UserId(1), new Car("Fiat", "Panda", 2015, 90000, null, null),
 				new Money(new BigDecimal("1000.00")), new Money(new BigDecimal("100.00")),
-				Instant.now().plus(Duration.ofDays(1)), AuctionStatus.OPEN)).id();
+				endsAt, AuctionStatus.OPEN)).id();
 	}
 
 	@AfterEach
@@ -83,11 +86,19 @@ class AuctionEventsApiTests {
 			JsonNode event = json.readTree(client.events("bid-placed").getFirst());
 			assertThat(event.get("type").asString()).isEqualTo("bid-placed");
 			assertThat(event.get("auctionId").asLong()).isEqualTo(auctionId);
-			assertThat(event.get("occurredAt").asString()).isNotBlank();
-			assertThat(event.get("data").get("bidId").asLong()).isEqualTo(bid.getBody().get("id").asLong());
-			assertThat(event.get("data").get("amount").asString()).isEqualTo("1200.00");
-			assertThat(event.get("data").get("bidderName").asString()).isEqualTo("B***");
-			assertThat(event.get("data").get("minNextBid").asString()).isEqualTo("1300.00");
+			assertThat(Instant.parse(event.get("occurredAt").asString()))
+					.isEqualTo(Instant.parse(bid.getBody().get("placedAt").asString()));
+			JsonNode data = event.get("data");
+			assertThat(data.get("bidId").asLong()).isEqualTo(bid.getBody().get("id").asLong());
+			assertThat(data.get("amount").asString()).isEqualTo("1200.00");
+			assertThat(data.get("bidderId").asLong()).isEqualTo(BIDDER);
+			assertThat(data.get("bidderName").asString()).isEqualTo("B***");
+			assertThat(data.get("highestBidderId").asLong()).isEqualTo(BIDDER);
+			assertThat(data.get("currentBid").asString()).isEqualTo("1200.00");
+			assertThat(data.get("minNextBid").asString()).isEqualTo("1300.00");
+			assertThat(data.get("bidCount").asInt()).isEqualTo(1);
+			assertThat(Instant.parse(data.get("endsAt").asString())).isEqualTo(endsAt);
+			assertThat(data.get("extended").asBoolean()).isFalse();
 			assertThat(client.lines()).noneMatch(line -> line.startsWith("id:"));
 		}
 	}
