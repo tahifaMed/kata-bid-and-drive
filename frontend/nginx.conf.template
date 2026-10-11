@@ -7,6 +7,23 @@ server {
     # Railway private DNS. Resolved at request time, so nginx starts even if the backend is still deploying.
     resolver [fd12::10] valid=10s ipv6=on;
 
+    # Live auction events (spec 009, ADR 0012). Regex locations win over the /api/ prefix below.
+    # Each event must reach the browser at once, so nothing is buffered, cached or compressed.
+    # The backend sends a keepalive every 25 s; a 60 s read timeout tolerates one missed beat.
+    location ~ ^/api/auctions/\d+/events$ {
+        set $backend_upstream ${BACKEND_URL};
+        proxy_pass $backend_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        gzip off;
+        proxy_read_timeout 60s;
+    }
+
     # Same origin as the app, so the browser needs no CORS. BACKEND_URL is set per service.
     location /api/ {
         set $backend_upstream ${BACKEND_URL};
