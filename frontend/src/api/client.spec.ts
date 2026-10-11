@@ -4,7 +4,7 @@ import { ApiError, apiFetch } from './client'
 import { useIdentityStore } from '../features/identity/stores/identity'
 
 beforeEach(() => {
-  localStorage.clear()
+  sessionStorage.clear()
   setActivePinia(createPinia())
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('[]', { status: 200 })))
 })
