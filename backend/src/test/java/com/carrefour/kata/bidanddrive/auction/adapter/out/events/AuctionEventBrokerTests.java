@@ -185,6 +185,18 @@ class AuctionEventBrokerTests {
 	}
 
 	@Test
+	void reopening_accepts_streams_again() {
+		broker.closeAll();
+		broker.open();
+		FakeSink sink = new FakeSink();
+
+		broker.subscribe(5, sink);
+
+		assertThat(sink.completed).isFalse();
+		assertThat(broker.subscriberCount(5)).isEqualTo(1);
+	}
+
+	@Test
 	void closing_a_stream_that_is_already_closed_does_not_stop_the_others() {
 		FakeSink closed = new FakeSink();
 		FakeSink open = new FakeSink();

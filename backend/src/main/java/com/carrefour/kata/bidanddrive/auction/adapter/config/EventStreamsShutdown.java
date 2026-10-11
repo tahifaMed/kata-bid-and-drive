@@ -6,6 +6,8 @@ import org.springframework.context.SmartLifecycle;
 /**
  * Ends the open event streams when the application stops. It stops before the web server's graceful
  * shutdown (a higher phase stops first), which would otherwise wait its full timeout for them.
+ * A stop is not always final: a context can be restarted, as the test framework does with paused
+ * cached contexts, so a start opens the broker again.
  */
 class EventStreamsShutdown implements SmartLifecycle {
 
@@ -18,6 +20,7 @@ class EventStreamsShutdown implements SmartLifecycle {
 
 	@Override
 	public void start() {
+		broker.open();
 		running = true;
 	}
 

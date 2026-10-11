@@ -70,6 +70,11 @@ public class AuctionEventBroker {
 		});
 	}
 
+	/** Accepts streams again after {@link #closeAll()}, when a stopped application context is restarted. */
+	public void open() {
+		closed = false;
+	}
+
 	/** Ends every stream, so a shutdown does not wait for clients that would stay connected. They reconnect. */
 	public void closeAll() {
 		closed = true;
