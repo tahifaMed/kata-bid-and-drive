@@ -22,8 +22,8 @@ function testRouter() {
   })
 }
 
-function renderHeader(slots: Record<string, string> = {}) {
-  return render(AppHeader, { slots, global: { plugins: [createPinia(), testRouter()] } })
+function renderHeader() {
+  return render(AppHeader, { global: { plugins: [createPinia(), testRouter()] } })
 }
 
 describe('AppHeader', () => {
@@ -31,7 +31,7 @@ describe('AppHeader', () => {
     renderHeader()
 
     const nav = screen.getByRole('navigation', { name: 'Main' })
-    expect(nav.querySelector('a[href="/auctions"]')?.textContent).toBe('Auctions')
+    expect(nav.querySelector('a[href="/"]')?.textContent).toBe('Auctions')
     expect(screen.getByRole('link', { name: 'My bids' }).getAttribute('href')).toBe('/me/bids')
   })
 
@@ -47,9 +47,18 @@ describe('AppHeader', () => {
     expect(await screen.findByRole('combobox', { name: 'Acting as' })).toBeTruthy()
   })
 
-  it('shows the actions a page adds', () => {
-    renderHeader({ default: '<a href="/auctions/new">Sell a car</a>' })
+  it('links Sell a car to the create auction page on every page', () => {
+    renderHeader()
 
-    expect(screen.getByRole('link', { name: 'Sell a car' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Sell a car' }).getAttribute('href')).toBe(
+      '/auctions/new',
+    )
+  })
+
+  it('shows only the pages that exist', () => {
+    renderHeader()
+
+    expect(screen.queryByText('Watch list')).toBeNull()
+    expect(screen.queryByText('About')).toBeNull()
   })
 })

@@ -1,18 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/auctions',
       name: 'auctions',
       component: () => import('../features/auction/views/AuctionsView.vue'),
+    },
+    {
+      // The list used to live here. Kept so old links still work.
+      path: '/auctions',
+      redirect: '/',
     },
     {
       path: '/auctions/new',
@@ -29,14 +28,6 @@ const router = createRouter({
       path: '/me/bids',
       name: 'my-bids',
       component: () => import('../features/bidding/views/MyBidsView.vue'),
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
     },
   ],
 })
