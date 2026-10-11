@@ -20,3 +20,8 @@ export function fetchAuction(id: number): Promise<AuctionResponse> {
 export function fetchOpenAuctions(page: number): Promise<AuctionListPage> {
   return apiFetch<AuctionListPage>(`/api/auctions?page=${page}&size=${PAGE_SIZE}`)
 }
+
+/** The public events stream of one auction (spec 009). `EventSource` sends no headers, and needs none. */
+export function auctionEventsUrl(id: number): string {
+  return `/api/auctions/${id}/events`
+}

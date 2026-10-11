@@ -38,7 +38,7 @@ Consumes `GET /api/auctions/{id}/events` (009) and `GET /api/auctions/{id}` (006
 - No Pinia store. State lives in the composable.
 
 ## Slices
-1. Composable `useAuctionStream`: connect, typed events, cleanup on unmount, error counting, unit tests with a fake `EventSource`. Covers criteria: 5, 6, 8.
+1. [x] Composable `useAuctionStream`: connect, typed events, cleanup on unmount, error counting, unit tests with a fake `EventSource`. Covers criteria: 5, 6, 8.
 2. `AuctionDetailView` applies `bid-placed` to price, count, minimum and history; refetch on reconnect; `endsAt` update. Covers criteria: 1, 4, 7.
 3. Outbid toast and own-bid handling using the selected user id; live indicator. Covers criteria: 2, 3.
 
