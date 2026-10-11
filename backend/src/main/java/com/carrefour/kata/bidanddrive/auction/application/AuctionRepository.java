@@ -24,4 +24,7 @@ public interface AuctionRepository {
 	/** The auction with its car, whatever its status or end time. */
 	Optional<Auction> findById(long id);
 
+	/** Whether the auction is stored, whatever its status or end time. */
+	boolean existsById(long id);
+
 }

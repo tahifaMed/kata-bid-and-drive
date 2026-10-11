@@ -39,7 +39,7 @@ The body is an RFC 9457 ProblemDetail with `status: 401`, `title: "Unauthorized"
 
 ## UI (frontend)
 - Shared component `src/components/UserSwitcher.vue`, placed in the app header. The header of the auctions page is the only app header today.
-- `src/features/identity/stores/identity.ts` (Pinia store `identity`): `currentUserId`, `users`, `setUser(id)` and `loadUsers()`. The choice is stored in `localStorage` under `bidanddrive.currentUserId`, inside try/catch.
+- `src/features/identity/stores/identity.ts` (Pinia store `identity`): `currentUserId`, `users`, `setUser(id)` and `loadUsers()`. The choice is stored in `sessionStorage` (per tab, ADR 0001) under `bidanddrive.currentUserId`, inside try/catch.
 - `src/features/identity/api.ts`: `fetchUsers()`. `src/features/identity/types.ts`: `UserSummary {id, displayName}`.
 - `src/api/client.ts`: `apiFetch(path, init)`, the only place that calls `fetch`. It adds `X-User-Id` from the identity store. A non-2xx response throws `ApiError`, which has a numeric `status`. Later specs use it for all calls and rely on `status` for 401 and 409 handling.
 - No new route.

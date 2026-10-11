@@ -13,6 +13,7 @@ const seededUsers = [
 ]
 
 beforeEach(() => {
+  sessionStorage.clear()
   localStorage.clear()
   setActivePinia(createPinia())
 })
@@ -26,6 +27,18 @@ describe('identity store', () => {
     expect(useIdentityStore().currentUserId).toBe(1)
   })
 
+  it('ignores a choice made in another tab', () => {
+    localStorage.setItem(STORAGE_KEY, '2')
+
+    expect(useIdentityStore().currentUserId).toBe(1)
+  })
+
+  it('does not share the chosen user with other tabs', () => {
+    useIdentityStore().setUser(2)
+
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
   it('keeps the chosen user after a page reload', () => {
     useIdentityStore().setUser(2)
 
@@ -35,14 +48,14 @@ describe('identity store', () => {
   })
 
   it('resets a stored user that is no longer seeded to user 1 once users load', async () => {
-    localStorage.setItem(STORAGE_KEY, '9')
+    sessionStorage.setItem(STORAGE_KEY, '9')
     vi.spyOn(usersApi, 'fetchUsers').mockResolvedValue(seededUsers)
 
     const store = useIdentityStore()
     await store.loadUsers()
 
     expect(store.currentUserId).toBe(1)
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('1')
+    expect(sessionStorage.getItem(STORAGE_KEY)).toBe('1')
   })
 
   it('falls back to user 1 when storage cannot be read', () => {

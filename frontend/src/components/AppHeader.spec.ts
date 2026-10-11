@@ -6,7 +6,7 @@ import AppHeader from './AppHeader.vue'
 import * as usersApi from '../features/identity/api'
 
 beforeEach(() => {
-  localStorage.clear()
+  sessionStorage.clear()
   vi.spyOn(usersApi, 'fetchUsers').mockResolvedValue([{ id: 1, displayName: 'Alice' }])
 })
 

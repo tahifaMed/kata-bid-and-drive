@@ -3,12 +3,13 @@ import { ref } from 'vue'
 import { fetchUsers } from '../api'
 import type { UserSummary } from '../types'
 
+// Per tab (ADR 0001): two tabs can act as two users, and a reload keeps the tab's choice.
 const STORAGE_KEY = 'bidanddrive.currentUserId'
 const DEFAULT_USER_ID = 1
 
 function readStoredUserId(): number {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = sessionStorage.getItem(STORAGE_KEY)
     const id = Number(raw)
     return raw !== null && Number.isInteger(id) && id > 0 ? id : DEFAULT_USER_ID
   } catch {
@@ -18,9 +19,9 @@ function readStoredUserId(): number {
 
 function writeStoredUserId(id: number): void {
   try {
-    localStorage.setItem(STORAGE_KEY, String(id))
+    sessionStorage.setItem(STORAGE_KEY, String(id))
   } catch {
-    // Storage unavailable: the choice still holds for this page session.
+    // Storage unavailable: the choice still holds until the page reloads.
   }
 }
 

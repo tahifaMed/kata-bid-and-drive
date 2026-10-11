@@ -72,4 +72,9 @@ class JpaAuctionRepository implements AuctionRepository {
 		return repository.findWithCarById(id).map(AuctionEntity::toDomain);
 	}
 
+	@Override
+	public boolean existsById(long id) {
+		return repository.existsById(id);
+	}
+
 }

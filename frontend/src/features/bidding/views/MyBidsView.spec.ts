@@ -29,7 +29,7 @@ function collection(...items: MyBid[]): MyBidsCollection {
 }
 
 beforeEach(() => {
-  localStorage.clear()
+  sessionStorage.clear()
   vi.mocked(fetchMyBids).mockReset()
   vi.spyOn(usersApi, 'fetchUsers').mockResolvedValue([
     { id: 2, displayName: 'Bob' },
@@ -43,7 +43,7 @@ afterEach(() => {
 })
 
 function renderView(userId = 2) {
-  localStorage.setItem('bidanddrive.currentUserId', String(userId))
+  sessionStorage.setItem('bidanddrive.currentUserId', String(userId))
   const pinia = createPinia()
   setActivePinia(pinia)
   const router = createRouter({
