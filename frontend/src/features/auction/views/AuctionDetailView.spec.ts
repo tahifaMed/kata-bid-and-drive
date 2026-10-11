@@ -267,9 +267,13 @@ describe('AuctionDetailView', () => {
       })
     }
 
-    it('shows who won at what price, and no bid panel or minimum, on a sold auction', async () => {
+    it.each([
+      ['the winner', 2],
+      ['the seller', 1],
+      ['another buyer', 3],
+    ])('shows %s who won at what price, and no bid panel or minimum, on a sold auction', async (_, userId) => {
       vi.mocked(fetchAuction).mockResolvedValue(closed())
-      await renderAt('/auctions/5', 2)
+      await renderAt('/auctions/5', userId)
 
       const result = await screen.findByRole('region', { name: 'Result' })
       expect(within(result).getByText('Sold to B*** for USD 5,200.00')).toBeTruthy()
@@ -372,6 +376,38 @@ describe('AuctionDetailView', () => {
 
         expect(await screen.findByText('Sold to B*** for USD 5,200.00')).toBeTruthy()
         expect(fetchAuction).toHaveBeenCalledTimes(3)
+      })
+
+      it('stops trying once the user leaves the page, even with a fetch on its way', async () => {
+        let answer: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+        vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+        await vi.advanceTimersByTimeAsync(2_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+
+        cleanup()
+        answer(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        await vi.advanceTimersByTimeAsync(20_000)
+
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+      })
+
+      it('gives another auction with the same end time its own 3 tries', async () => {
+        vi.mocked(fetchAuction).mockImplementation(async (id) =>
+          auctionDetail({ id, endsAt: '2026-10-11T12:00:00Z' }),
+        )
+        const router = await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Price' })
+        await vi.advanceTimersByTimeAsync(20_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(4)
+
+        await router.push('/auctions/6')
+        await vi.advanceTimersByTimeAsync(20_000)
+
+        expect(vi.mocked(fetchAuction).mock.calls.filter(([id]) => id === 6)).toHaveLength(4)
       })
     })
 
