@@ -174,6 +174,11 @@ class PlaceBidTests {
 		}
 
 		@Override
+		public boolean existsById(long id) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
 		public Optional<Auction> findById(long id) {
 			return Optional.ofNullable(byId.get(id));
 		}

@@ -40,7 +40,7 @@ Given / When / Then. Each criterion maps to at least one test. "Received" is che
 - A heartbeat and an event can write to the same emitter at once. `SseEmitter` serialises sends internally, so the broker adds no lock.
 - The server learns that a client left only when a write fails. That happens at the next heartbeat or event.
 - Any existing auction can be subscribed to, whatever its status. Only an unknown id gives 404. The check runs before the emitter is created, through a new application use case `CheckAuctionExists` that throws `AuctionNotFoundException` (the controller does not call the repository). It needs an `AuctionRepository.existsById` port method.
-- The stream's 404 must not be lost to content negotiation (`produces = text/event-stream`). The handler for this controller returns `ResponseEntity<ProblemDetail>` with content type `application/problem+json` set explicitly. On subscribe the response headers are flushed at once, so a client knows the stream is open.
+- The stream's 404 must not be lost to content negotiation (`produces = text/event-stream`). The existing `ProblemDetail` handler is enough: Spring writes a `ProblemDetail` as `application/problem+json` even when the request accepts only `text/event-stream`, and a test pins this. On subscribe the broker sends the comment `connected`, because Spring flushes an SSE response only on its first write. This opens the stream at once, so a client knows it is subscribed. A sink that fails on connect is not kept.
 - A stream stays open when its auction closes. 011 sends `auction-closed` on it and decides whether to complete the emitter after that.
 - The heartbeat is one scheduled sweep that sends the `keepalive` comment to every open emitter. Scheduling is enabled in an adapter configuration class.
 - No replay. A client that reconnects misses events and must refetch (handled in 010).
@@ -53,7 +53,7 @@ Given / When / Then. Each criterion maps to at least one test. "Received" is che
 |---|---|---|---|---|
 | GET | /api/auctions/{id}/events | none | 200 `text/event-stream` | 400 non-numeric id, 404 unknown auction (`application/problem+json`) |
 
-The endpoint is served by a new `AuctionEventsController`. It is added to the `assignableTypes` of `AuctionExceptionHandler`, which already maps `AuctionNotFoundException` (404) and `MethodArgumentTypeMismatchException` (400). The 404 is returned with an explicit `application/problem+json` content type.
+The endpoint is served by a new `AuctionEventsController`. It is added to the `assignableTypes` of `AuctionExceptionHandler`, which already maps `AuctionNotFoundException` (404) and `MethodArgumentTypeMismatchException` (400). The 404 is sent as `application/problem+json`.
 
 ## UI (frontend)
 None in this spec. The stream is consumed in 010.
@@ -61,7 +61,7 @@ None in this spec. The stream is consumed in 010.
 ## Slices
 1. [x] Domain and broker: `AuctionEvent` and `BidPlaced`; the port `AuctionEventPublisher`; the `EventSink` seam and the in-memory broker with subscribe, unsubscribe, subscriber count, broadcast, heartbeat and failure isolation. Unit tests with fake sinks. Covers criteria: 5 (broker part), 8.
 2. [x] Publishing after commit: `PlaceBid` publishes through the port; the adapter uses `ApplicationEventPublisher` and an `AFTER_COMMIT` listener that forwards to the broker. Integration tests through the real `PlaceBid` bean, with a fake sink subscribed on the broker. Covers criteria: 1 (event content), 2, 3, 4, 5 (`execute` returns, healthy sink receives).
-3. Endpoint: `CheckAuctionExists` and `existsById`; `AuctionEventsController` with an `SseEmitter` wrapped as an `EventSink`; the envelope DTO; 404 and 400 before opening; public access. Tests on a real server (`RANDOM_PORT`) with an HTTP client reading the stream. Covers criteria: 1 (end to end), 5 (HTTP 201), 6, 10.
+3. [x] Endpoint: `CheckAuctionExists` and `existsById`; `AuctionEventsController` with an `SseEmitter` wrapped as an `EventSink`; the envelope DTO; 404 and 400 before opening; public access. Tests on a real server (`RANDOM_PORT`) with an HTTP client reading the stream. Covers criteria: 1 (end to end), 5 (HTTP 201), 6, 10.
 4. Heartbeat: `EventsProperties`, `@EnableScheduling` in an adapter configuration class, and the sweep. Real-server tests with a 50 millisecond heartbeat. Covers criteria: 7, 9.
 5. Deploy: a regex `location` for `/api/auctions/\d+/events` in `frontend/nginx.conf.template`, placed before `/api/`, with `proxy_buffering off`, `proxy_cache off`, `gzip off`, `proxy_http_version 1.1`, `proxy_set_header Connection ""` and a `proxy_read_timeout` above the heartbeat ([ADR 0012](../adr/0012-railway-deployment.md)). No criterion. Checked with `nginx -t` and a manual stream on Railway, which also confirms that Railway's edge does not cut the stream early. A client reconnects in any case (010).
 

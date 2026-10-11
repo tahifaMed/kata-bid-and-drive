@@ -15,17 +15,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class AuctionEventBroker {
 
+	static final String CONNECTED = "connected";
 	static final String HEARTBEAT = "keepalive";
 
 	private static final Logger log = LoggerFactory.getLogger(AuctionEventBroker.class);
 
 	private final Map<Long, List<EventSink>> subscribers = new ConcurrentHashMap<>();
 
+	/** Sends a {@code connected} comment at once: an SSE response is only flushed on its first write. */
 	public void subscribe(long auctionId, EventSink sink) {
 		sink.onCompletion(() -> unsubscribe(auctionId, sink));
 		sink.onTimeout(() -> unsubscribe(auctionId, sink));
 		sink.onError(error -> unsubscribe(auctionId, sink));
 		subscribers.computeIfAbsent(auctionId, id -> new CopyOnWriteArrayList<>()).add(sink);
+		deliver(auctionId, sink, () -> sink.comment(CONNECTED));
 	}
 
 	public void unsubscribe(long auctionId, EventSink sink) {

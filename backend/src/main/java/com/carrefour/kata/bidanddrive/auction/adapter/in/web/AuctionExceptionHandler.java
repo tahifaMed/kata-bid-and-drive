@@ -16,7 +16,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.List;
 import java.util.Map;
 
-@RestControllerAdvice(assignableTypes = AuctionController.class)
+@RestControllerAdvice(assignableTypes = {AuctionController.class, AuctionEventsController.class})
 class AuctionExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(AuctionExceptionHandler.class);

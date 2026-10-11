@@ -187,8 +187,8 @@ class BidEventsAfterCommitTests {
 	@Test
 	void a_failing_subscriber_does_not_fail_the_bid_or_starve_the_others() {
 		FakeSink broken = new FakeSink();
-		broken.failure = new IOException("connection reset");
 		broker.subscribe(auctionId, broken);
+		broken.failure = new IOException("connection reset");
 
 		Bid bid = placeBid.execute(auctionId, BOB, new RawAmount("1200.00"));
 

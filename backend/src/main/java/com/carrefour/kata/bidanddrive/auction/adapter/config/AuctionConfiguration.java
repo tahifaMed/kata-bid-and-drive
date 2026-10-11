@@ -3,6 +3,7 @@ package com.carrefour.kata.bidanddrive.auction.adapter.config;
 import com.carrefour.kata.bidanddrive.auction.application.AuctionEventPublisher;
 import com.carrefour.kata.bidanddrive.auction.application.AuctionRepository;
 import com.carrefour.kata.bidanddrive.auction.application.BidRepository;
+import com.carrefour.kata.bidanddrive.auction.application.CheckAuctionExists;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
 import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.GetBid;
@@ -50,6 +51,11 @@ class AuctionConfiguration {
 	@Bean
 	ListMyBids listMyBids(BidRepository bids) {
 		return new ListMyBids(bids);
+	}
+
+	@Bean
+	CheckAuctionExists checkAuctionExists(AuctionRepository auctions) {
+		return new CheckAuctionExists(auctions);
 	}
 
 	@Bean

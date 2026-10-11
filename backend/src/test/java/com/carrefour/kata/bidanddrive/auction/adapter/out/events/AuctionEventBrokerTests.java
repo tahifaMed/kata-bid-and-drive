@@ -23,6 +23,25 @@ class AuctionEventBrokerTests {
 	}
 
 	@Test
+	void a_new_subscriber_gets_a_connected_comment_so_the_stream_opens_at_once() {
+		FakeSink sink = new FakeSink();
+
+		broker.subscribe(5, sink);
+
+		assertThat(sink.comments).containsExactly("connected");
+	}
+
+	@Test
+	void a_subscriber_that_fails_on_connect_is_not_kept() {
+		FakeSink gone = new FakeSink();
+		gone.failure = new IOException("connection reset");
+
+		broker.subscribe(5, gone);
+
+		assertThat(broker.subscriberCount(5)).isZero();
+	}
+
+	@Test
 	void sends_an_event_only_to_the_subscribers_of_its_auction() {
 		FakeSink onFive = new FakeSink();
 		FakeSink onSix = new FakeSink();
@@ -82,10 +101,10 @@ class AuctionEventBrokerTests {
 	@Test
 	void a_failing_sink_is_removed_and_the_others_still_get_the_event() {
 		FakeSink broken = new FakeSink();
-		broken.failure = new IllegalStateException("already completed");
 		FakeSink healthy = new FakeSink();
 		broker.subscribe(5, broken);
 		broker.subscribe(5, healthy);
+		broken.failure = new IllegalStateException("already completed");
 
 		assertThatNoException().isThrownBy(() -> broker.broadcast(5, "bid-placed", "{}"));
 
@@ -97,9 +116,9 @@ class AuctionEventBrokerTests {
 	@Test
 	void a_sink_that_cannot_be_closed_does_not_break_the_broadcast() {
 		FakeSink broken = new FakeSink();
+		broker.subscribe(5, broken);
 		broken.failure = new IOException("connection reset");
 		broken.closeFailure = new IllegalStateException("already completed");
-		broker.subscribe(5, broken);
 
 		assertThatNoException().isThrownBy(() -> broker.broadcast(5, "bid-placed", "{}"));
 
@@ -115,15 +134,15 @@ class AuctionEventBrokerTests {
 
 		broker.heartbeat();
 
-		assertThat(onFive.comments).containsExactly("keepalive");
-		assertThat(onSix.comments).containsExactly("keepalive");
+		assertThat(onFive.comments).containsExactly("connected", "keepalive");
+		assertThat(onSix.comments).containsExactly("connected", "keepalive");
 	}
 
 	@Test
 	void a_heartbeat_to_a_gone_client_removes_it() {
 		FakeSink gone = new FakeSink();
-		gone.failure = new IOException("connection reset");
 		broker.subscribe(5, gone);
+		gone.failure = new IOException("connection reset");
 
 		broker.heartbeat();
 
