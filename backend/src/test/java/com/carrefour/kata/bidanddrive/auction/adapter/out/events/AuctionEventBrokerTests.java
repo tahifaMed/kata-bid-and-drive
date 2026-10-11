@@ -126,6 +126,34 @@ class AuctionEventBrokerTests {
 	}
 
 	@Test
+	void closing_completes_every_stream_and_forgets_it() {
+		FakeSink onFive = new FakeSink();
+		FakeSink onSix = new FakeSink();
+		broker.subscribe(5, onFive);
+		broker.subscribe(6, onSix);
+
+		broker.closeAll();
+
+		assertThat(onFive.completed).isTrue();
+		assertThat(onSix.completed).isTrue();
+		assertThat(broker.subscriberCount(5)).isZero();
+		assertThat(broker.subscriberCount(6)).isZero();
+	}
+
+	@Test
+	void closing_a_stream_that_is_already_closed_does_not_stop_the_others() {
+		FakeSink closed = new FakeSink();
+		FakeSink open = new FakeSink();
+		broker.subscribe(5, closed);
+		broker.subscribe(5, open);
+		closed.closeFailure = new IllegalStateException("already completed");
+
+		assertThatNoException().isThrownBy(broker::closeAll);
+
+		assertThat(open.completed).isTrue();
+	}
+
+	@Test
 	void the_heartbeat_reaches_every_auction() {
 		FakeSink onFive = new FakeSink();
 		FakeSink onSix = new FakeSink();

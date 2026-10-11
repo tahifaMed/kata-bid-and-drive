@@ -11,6 +11,7 @@ ADR 0002 picks SSE and an in-memory broker that publishes after commit. Spec 009
 - The after-commit listener sends to subscribers synchronously. The broker catches any exception per emitter, completes it with the error and removes it. Nothing leaves the broker, because an exception thrown after commit would still reach the bidder's request and turn a committed bid into an error.
 - One scheduled sweep sends the `keepalive` SSE comment to every open emitter, at a configurable rate.
 - `PlaceBid` keeps its `@Transactional`, the one Spring import in the application layer. The after-commit listener depends on it, so every publisher of auction events runs in a transaction.
+- On shutdown, every open stream is completed before the web server's graceful shutdown, which would otherwise wait its whole timeout for them. Clients reconnect.
 - A stream stays open when its auction closes. 011 decides whether to complete it after sending `auction-closed`.
 
 ## Consequences

@@ -13,6 +13,7 @@ final class FakeSink implements EventSink {
 	Exception failure;
 	RuntimeException closeFailure;
 	Throwable completedWithError;
+	boolean completed;
 	Runnable completion;
 	Runnable timeout;
 	Consumer<Throwable> error;
@@ -27,6 +28,14 @@ final class FakeSink implements EventSink {
 	public void comment(String text) throws IOException {
 		fail();
 		comments.add(text);
+	}
+
+	@Override
+	public void complete() {
+		if (closeFailure != null) {
+			throw closeFailure;
+		}
+		completed = true;
 	}
 
 	@Override

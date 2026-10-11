@@ -25,6 +25,11 @@ public final class SseEmitterSink implements EventSink {
 	}
 
 	@Override
+	public void complete() {
+		emitter.complete();
+	}
+
+	@Override
 	public void completeWithError(Throwable cause) {
 		emitter.completeWithError(cause);
 	}

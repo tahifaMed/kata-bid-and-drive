@@ -13,6 +13,8 @@ public interface EventSink {
 
 	void comment(String text) throws IOException;
 
+	void complete();
+
 	void completeWithError(Throwable cause);
 
 	void onCompletion(Runnable callback);

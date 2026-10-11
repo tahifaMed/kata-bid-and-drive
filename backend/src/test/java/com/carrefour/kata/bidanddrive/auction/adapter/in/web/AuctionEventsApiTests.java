@@ -181,6 +181,10 @@ class AuctionEventsApiTests {
 		}
 
 		@Override
+		public void complete() {
+		}
+
+		@Override
 		public void completeWithError(Throwable cause) {
 		}
 

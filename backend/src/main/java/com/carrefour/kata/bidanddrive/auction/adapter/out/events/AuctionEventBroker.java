@@ -57,6 +57,20 @@ public class AuctionEventBroker {
 		});
 	}
 
+	/** Ends every stream, so a shutdown does not wait for clients that would stay connected. They reconnect. */
+	public void closeAll() {
+		subscribers.forEach((auctionId, sinks) -> {
+			for (EventSink sink : sinks) {
+				unsubscribe(auctionId, sink);
+				try {
+					sink.complete();
+				} catch (RuntimeException alreadyClosed) {
+					log.debug("Subscriber was already closed: {}", alreadyClosed.toString());
+				}
+			}
+		});
+	}
+
 	private void deliver(long auctionId, EventSink sink, Send send) {
 		try {
 			send.run();
