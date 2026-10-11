@@ -2,7 +2,6 @@
 name: implement-slice
 description: Implement one slice of a validated spec with TDD, one branch per spec. Use when a spec has status validated or in-progress and a slice is next.
 argument-hint: "<NNN> [slice number]"
-disable-model-invocation: true
 ---
 
 # Implement a slice
@@ -19,4 +18,4 @@ For each slice, in order:
 7. Commit with `/commit`. One slice is one logical commit, tests included.
 8. Mark the slice done in the spec and move on.
 
-When all slices are done, run `/test`, then `/open-pr`.
+When all slices are done, run `/test`, then `/open-pr`, then `/review-pr`. Stop at human gate B: show the PR URL and the review result.
