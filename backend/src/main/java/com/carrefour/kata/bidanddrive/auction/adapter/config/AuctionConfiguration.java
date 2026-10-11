@@ -49,8 +49,8 @@ class AuctionConfiguration {
 	}
 
 	@Bean
-	ListMyBids listMyBids(BidRepository bids) {
-		return new ListMyBids(bids);
+	ListMyBids listMyBids(BidRepository bids, Clock clock) {
+		return new ListMyBids(bids, clock);
 	}
 
 	@Bean

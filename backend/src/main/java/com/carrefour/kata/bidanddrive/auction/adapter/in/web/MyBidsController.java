@@ -26,7 +26,7 @@ class MyBidsController {
 	@GetMapping
 	MyBidsResponse list(@CurrentUser UserId bidder) {
 		List<MyBidItem> items = listMyBids.execute(bidder).stream()
-				.map(standing -> MyBidItem.of(standing, auctionUri(standing.auction().id())))
+				.map(view -> MyBidItem.of(view, auctionUri(view.standing().auction().id())))
 				.toList();
 		URI self = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/me/bids").build().toUri();
 		return new MyBidsResponse(new MyBidsResponse.Embedded(items),
