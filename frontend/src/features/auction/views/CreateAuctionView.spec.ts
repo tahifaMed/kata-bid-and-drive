@@ -13,7 +13,7 @@ function testRouter() {
     history: createMemoryHistory(),
     routes: [
       { path: '/auctions/new', component: CreateAuctionView },
-      { path: '/auctions', component: { template: '<div />' } },
+      { path: '/', component: { template: '<div />' } },
       { path: '/auctions/:id', component: { template: '<div />' } },
     ],
   })

@@ -124,7 +124,7 @@ const liveLabel = computed(() => {
 
     <main class="container-app stack-section py-6">
       <p>
-        <RouterLink to="/auctions">Back to auctions</RouterLink>
+        <RouterLink to="/">Back to auctions</RouterLink>
       </p>
 
       <p v-if="state === 'loading'" role="status" class="text-ink-muted">Loading auction…</p>

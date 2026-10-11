@@ -37,7 +37,7 @@ async function renderAt(path: string, userId = 1) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/auctions', component: { render: () => null } },
+      { path: '/', component: { render: () => null } },
       { path: '/auctions/:id', component: AuctionDetailView },
     ],
   })
@@ -72,7 +72,7 @@ describe('AuctionDetailView', () => {
     expect(screen.getByRole('region', { name: 'Bid history' })).toBeTruthy()
     expect(screen.getByText('B***')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Back to auctions' }).getAttribute('href')).toBe(
-      '/auctions',
+      '/',
     )
   })
 
