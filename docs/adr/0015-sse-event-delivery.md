@@ -15,7 +15,8 @@ ADR 0002 picks SSE and an in-memory broker that publishes after commit. Spec 009
 - A stream stays open when its auction closes. 011 decides whether to complete it after sending `auction-closed`.
 
 ## Consequences
-- A slow or stuck client can delay the bidder's response while its write blocks. This is acceptable for one instance with few viewers. An executor can be added behind the broker without changing the port.
+- A slow or stuck client can delay the bidder's response while its write blocks. The listener runs before the transaction's resources are released (Hibernate holds the connection until the entity manager closes), so that bid also keeps its database connection checked out meanwhile. A few such bids could drain the connection pool. This is accepted for one instance with few viewers. An executor can be added behind the broker without changing the port.
+- The heartbeat runs on Spring's default scheduler, which has one thread. A write that blocks there delays every other scheduled task. Revisit this before 011 adds its scheduled closer.
 - A heartbeat and an event can write to the same emitter at once. `SseEmitter` serialises its sends, so the broker adds no lock.
 - A client that leaves is noticed only at the next failed write, at most one heartbeat later.
 - Scheduling is enabled for the application, which 011's auto-close also needs.
