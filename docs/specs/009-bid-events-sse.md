@@ -59,7 +59,7 @@ The endpoint is served by a new `AuctionEventsController`. It is added to the `a
 None in this spec. The stream is consumed in 010.
 
 ## Slices
-1. Domain and broker: `AuctionEvent` and `BidPlaced`; the port `AuctionEventPublisher`; the `EventSink` seam and the in-memory broker with subscribe, unsubscribe, subscriber count, broadcast, heartbeat and failure isolation. Unit tests with fake sinks. Covers criteria: 5 (broker part), 8.
+1. [x] Domain and broker: `AuctionEvent` and `BidPlaced`; the port `AuctionEventPublisher`; the `EventSink` seam and the in-memory broker with subscribe, unsubscribe, subscriber count, broadcast, heartbeat and failure isolation. Unit tests with fake sinks. Covers criteria: 5 (broker part), 8.
 2. Publishing after commit: `PlaceBid` publishes through the port; the adapter uses `ApplicationEventPublisher` and an `AFTER_COMMIT` listener that forwards to the broker. Integration tests through the real `PlaceBid` bean, with a fake sink subscribed on the broker. Covers criteria: 1 (event content), 2, 3, 4, 5 (`execute` returns, healthy sink receives).
 3. Endpoint: `CheckAuctionExists` and `existsById`; `AuctionEventsController` with an `SseEmitter` wrapped as an `EventSink`; the envelope DTO; 404 and 400 before opening; public access. Tests on a real server (`RANDOM_PORT`) with an HTTP client reading the stream. Covers criteria: 1 (end to end), 5 (HTTP 201), 6, 10.
 4. Heartbeat: `EventsProperties`, `@EnableScheduling` in an adapter configuration class, and the sweep. Real-server tests with a 50 millisecond heartbeat. Covers criteria: 7, 9.
