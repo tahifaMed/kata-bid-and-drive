@@ -50,7 +50,9 @@ export function useAuctionStream(auctionId: Ref<number | null>, handlers: Auctio
     const opened = new EventSource(auctionEventsUrl(id))
     source = opened
 
+    // A replaced or stopped stream may still report; only the current one counts.
     opened.onopen = () => {
+      if (opened !== source) return
       errors = 0
       status.value = 'live'
       if (missedEvents) {
@@ -60,6 +62,7 @@ export function useAuctionStream(auctionId: Ref<number | null>, handlers: Auctio
     }
 
     opened.onerror = () => {
+      if (opened !== source) return
       errors += 1
       missedEvents = true
       if (errors >= MAX_ERRORS) {
@@ -71,12 +74,14 @@ export function useAuctionStream(auctionId: Ref<number | null>, handlers: Auctio
       // While CONNECTING the browser retries by itself. Once CLOSED it never will, so a new stream is opened.
       if (opened.readyState === EventSource.CLOSED) {
         opened.close()
+        clearTimeout(reopenTimer)
         reopenTimer = setTimeout(() => open(id), REOPEN_DELAY_MS)
       }
     }
 
     // The server is the source of truth, but a message is checked before it may change the page.
     opened.addEventListener('bid-placed', (message: MessageEvent<string>) => {
+      if (opened !== source) return
       let event: unknown
       try {
         event = JSON.parse(message.data)

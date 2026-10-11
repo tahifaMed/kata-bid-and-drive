@@ -148,17 +148,43 @@ describe('useAuctionStream', () => {
   })
 
   it('does not reopen a stream once it stopped', () => {
-    setup()
-    for (let i = 0; i < 5; i++) FakeEventSource.latest().fail(FakeEventSource.CLOSED)
+    const { status } = setup()
     for (let i = 0; i < 4; i++) {
-      vi.advanceTimersByTime(3000)
       FakeEventSource.latest().fail(FakeEventSource.CLOSED)
+      vi.advanceTimersByTime(3000)
     }
-    const opened = FakeEventSource.instances.length
+    FakeEventSource.latest().fail(FakeEventSource.CLOSED)
+    expect(FakeEventSource.instances).toHaveLength(5)
 
     vi.advanceTimersByTime(30_000)
 
-    expect(FakeEventSource.instances).toHaveLength(opened)
+    expect(FakeEventSource.instances).toHaveLength(5)
+    expect(status.value).toBe('unavailable')
+  })
+
+  it('keeps a single reopen pending when the old stream reports more errors', () => {
+    setup()
+    const source = FakeEventSource.latest()
+    source.fail(FakeEventSource.CLOSED)
+    source.fail(FakeEventSource.CLOSED)
+
+    vi.advanceTimersByTime(3000)
+
+    expect(FakeEventSource.instances).toHaveLength(2)
+  })
+
+  it('ignores errors and opens from a stream it already replaced', () => {
+    const { status } = setup()
+    const old = FakeEventSource.latest()
+    old.fail(FakeEventSource.CLOSED)
+    vi.advanceTimersByTime(3000)
+    FakeEventSource.latest().open()
+
+    old.fail(FakeEventSource.CLOSED)
+
+    expect(status.value).toBe('live')
+    vi.advanceTimersByTime(3000)
+    expect(FakeEventSource.instances).toHaveLength(2)
   })
 
   it('counts errors across reopened streams', () => {
