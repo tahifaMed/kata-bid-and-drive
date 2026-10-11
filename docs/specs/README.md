@@ -14,7 +14,7 @@ Specs are numbered in build order. Each spec is one feature, one branch (`feat/N
 | 008 | [My bids](008-my-bids.md) | 007 | `GET /api/me/bids`, `/me/bids` |
 | 009 | [Bid events over SSE](009-bid-events-sse.md) | 007 | event envelope, `GET .../events` |
 | 010 | [Live auction page](010-live-auction-page.md) | 009, 008 | `useAuctionStream`, outbid toast |
-| 011 | [Reserve and auto-close](011-reserve-and-auto-close.md) | 009 | reserve, closer, `auction-closed` |
+| 011 | [Auction result](011-auction-result.md) | 008, 010 | `CLOSED`, outcome, `WON`/`LOST` |
 | 012 | [Anti-sniping](012-anti-sniping.md) | 009, 010 | extension rule, `extended` flag |
 | 013 | [Watchlist](013-watchlist.md) | 005 | `watch`, `/api/me/watchlist` |
 
@@ -24,10 +24,10 @@ Dependency graph:
 003 → 004 → 005 ─────────────────────────→ 013
           ├→ 006 → 007 → 008 ─┐
                        └→ 009 ┴→ 010 → 012
-                              └→ 011
+                                     └→ 011
 ```
 
-Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) and touches shared files only in the ways its spec lists.
+Specs 011, 012 and 013 are additive. Each owns its own migration (none, none, V6) and touches shared files only in the ways its spec lists.
 
 ## Shared conventions
 - **Money**: `BigDecimal`, scale 2, sent as a JSON string ([ADR 0004](../adr/0004-money-as-json-string.md)).
@@ -36,7 +36,7 @@ Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) 
 - **Identity**: `X-User-Id` header ([ADR 0001](../adr/0001-identity-user-switcher.md)). Read endpoints for auctions are public and ignore an invalid id ([ADR 0014](../adr/0014-optional-identity-on-public-reads.md)). Anything under `/api/me` needs identity.
 - **Hypermedia**: HAL responses with `_links`. Collections use HAL paged models, except small per-user lists under `/api/me` (008).
 - **Paging**: `page` is 0-based, `size` defaults to 20 and is capped at 100.
-- **Live events**: SSE with envelope `{type, auctionId, occurredAt, data}` ([ADR 0002](../adr/0002-sse-over-websocket.md)). Event types: `bid-placed` (009), `auction-closed` (011).
+- **Live events**: SSE with envelope `{type, auctionId, occurredAt, data}` ([ADR 0002](../adr/0002-sse-over-websocket.md)). Event types: `bid-placed` (009).
 
 ## Decision index
 - [ADR 0001](../adr/0001-identity-user-switcher.md): identity via seeded users and header.
@@ -46,3 +46,5 @@ Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) 
 - [ADR 0005](../adr/0005-bid-error-mapping.md): bid status codes and check order.
 - [ADR 0006](../adr/0006-bidding-rules.md): seller cannot bid, no self-outbid, first-bid rule.
 - [ADR 0014](../adr/0014-optional-identity-on-public-reads.md): public reads treat an invalid identity as anonymous.
+- [ADR 0015](../adr/0015-sse-event-delivery.md): SSE event delivery.
+- [ADR 0016](../adr/0016-auction-result-on-read.md): auction result worked out on read, no closer job.
