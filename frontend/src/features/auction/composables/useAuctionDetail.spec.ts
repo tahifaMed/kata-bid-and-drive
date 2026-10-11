@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../api/client'
 import { fetchAuction } from '../api'
 import { auctionDetail } from '../testing/auctionDetailFixture'
+import { bidPlaced } from '../testing/FakeEventSource'
 import { useAuctionDetail } from './useAuctionDetail'
 
 vi.mock('../api', () => ({ fetchAuction: vi.fn<typeof fetchAuction>() }))
@@ -155,5 +156,109 @@ describe('useAuctionDetail', () => {
     await refreshed
 
     expect(detail.auction.value?.id).toBe(6)
+  })
+
+  describe('applyBidPlaced', () => {
+    async function loaded(overrides: Parameters<typeof auctionDetail>[0] = {}) {
+      vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail(overrides))
+      const detail = useAuctionDetail()
+      await detail.load('5')
+      return detail
+    }
+
+    it('takes the new price, minimum, count, highest bidder and end from the event', async () => {
+      const detail = await loaded()
+
+      const applied = detail.applyBidPlaced(
+        bidPlaced({
+          currentBid: '12500.00',
+          minNextBid: '12600.00',
+          bidCount: 1,
+          highestBidderId: 3,
+          endsAt: '2026-10-12T18:05:00Z',
+        }),
+      )
+
+      expect(applied).toBe(true)
+      expect(detail.auction.value).toMatchObject({
+        currentBid: '12500.00',
+        minNextBid: '12600.00',
+        bidCount: 1,
+        highestBidderId: 3,
+        endsAt: '2026-10-12T18:05:00Z',
+      })
+    })
+
+    it('adds the bid at the top of the history', async () => {
+      const older = { amount: '12000.00', placedAt: '2026-10-11T09:00:00Z', bidderName: 'C***' }
+      const detail = await loaded({ bidCount: 1, bids: [older] })
+
+      detail.applyBidPlaced(
+        bidPlaced({ amount: '12100.00', bidderName: 'B***', bidCount: 2 }, { occurredAt: '2026-10-11T10:00:00Z' }),
+      )
+
+      expect(detail.auction.value?.bids).toEqual([
+        { amount: '12100.00', placedAt: '2026-10-11T10:00:00Z', bidderName: 'B***' },
+        older,
+      ])
+    })
+
+    it.each([2, 3])('ignores an event whose bid count %i is not above the shown 3', async (bidCount) => {
+      const detail = await loaded({ bidCount: 3, currentBid: '13000.00' })
+
+      const applied = detail.applyBidPlaced(bidPlaced({ bidCount, currentBid: '12900.00' }))
+
+      expect(applied).toBe(false)
+      expect(detail.auction.value?.currentBid).toBe('13000.00')
+      expect(detail.auction.value?.bids).toEqual([])
+    })
+
+    it('ignores an event for another auction', async () => {
+      const detail = await loaded()
+
+      expect(detail.applyBidPlaced(bidPlaced({}, { auctionId: 6 }))).toBe(false)
+      expect(detail.auction.value?.bidCount).toBe(0)
+    })
+
+    it('ignores an event before the auction is loaded', () => {
+      const detail = useAuctionDetail()
+
+      expect(detail.applyBidPlaced(bidPlaced())).toBe(false)
+      expect(detail.auction.value).toBeNull()
+    })
+
+    it('fetches the auction again when an event shows bids were missed', async () => {
+      const detail = await loaded({ bidCount: 3 })
+      const missed = { amount: '12300.00', placedAt: '2026-10-11T09:59:00Z', bidderName: 'C***' }
+      const latest = { amount: '12400.00', placedAt: '2026-10-11T10:00:00Z', bidderName: 'B***' }
+      vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ bidCount: 5, bids: [latest, missed] }))
+
+      detail.applyBidPlaced(bidPlaced({ bidCount: 5, amount: '12400.00' }))
+      await vi.waitFor(() => expect(detail.auction.value?.bids).toEqual([latest, missed]))
+
+      expect(fetchAuction).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not fetch again when the event follows the shown count', async () => {
+      const detail = await loaded({ bidCount: 3 })
+
+      detail.applyBidPlaced(bidPlaced({ bidCount: 4 }))
+
+      expect(fetchAuction).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps a newer event when a refresh started earlier answers with fewer bids', async () => {
+      const detail = await loaded()
+      let answer: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
+      vi.mocked(fetchAuction).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+
+      const refreshed = detail.refresh()
+      detail.applyBidPlaced(bidPlaced({ bidCount: 2, currentBid: '12100.00' }))
+      answer(auctionDetail({ bidCount: 1, currentBid: '12000.00' }))
+      await refreshed
+
+      expect(detail.auction.value?.bidCount).toBe(2)
+      expect(detail.auction.value?.currentBid).toBe('12100.00')
+    })
   })
 })

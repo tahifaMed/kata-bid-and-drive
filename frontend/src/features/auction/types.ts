@@ -68,3 +68,26 @@ export interface AuctionResponse {
   /** The selected user's own bid, present only when they bid on this auction (spec 008). */
   myBid?: { highestAmount: string; status: 'WINNING' | 'OUTBID' }
 }
+
+/** The `data` of a `bid-placed` event (spec 009). Money is a string (ADR 0004). */
+export interface BidPlacedData {
+  bidId: number
+  amount: string
+  bidderId: number
+  /** Masked as in the bid history, for example "B***". */
+  bidderName: string
+  highestBidderId: number
+  currentBid: string
+  minNextBid: string
+  bidCount: number
+  endsAt: string
+  extended: boolean
+}
+
+/** One message on the auction events stream (spec 009, ADR 0015). `occurredAt` is the bid's `placedAt`. */
+export interface BidPlacedEvent {
+  type: 'bid-placed'
+  auctionId: number
+  occurredAt: string
+  data: BidPlacedData
+}
