@@ -128,6 +128,20 @@ class GetAuctionDetailTests {
 	}
 
 	@Test
+	void with_a_standing_the_auction_comes_from_the_same_read_as_the_standing() {
+		auctions.add(auction(5, NOW.plusSeconds(3600)));
+		// A bid landed between the two reads: the standing saw Carol take the lead from Bob.
+		Auction later = new Auction(5L, ALICE, car(), money("12000.00"), money("100.00"), NOW.plusSeconds(3600),
+				AuctionStatus.OPEN, money("12100.00"), CAROL, 2, 2);
+		standingsOnFive.put(BOB, new BidderStanding(later, BOB, money("12000.00")));
+
+		AuctionDetail detail = getAuctionDetail.execute(5, BOB);
+
+		assertThat(detail.auction()).isEqualTo(later);
+		assertThat(detail.myBid().auction()).isEqualTo(later);
+	}
+
+	@Test
 	void a_viewer_who_did_not_bid_and_an_anonymous_caller_get_no_standing() {
 		auctions.add(auction(5, NOW.plusSeconds(3600)));
 
