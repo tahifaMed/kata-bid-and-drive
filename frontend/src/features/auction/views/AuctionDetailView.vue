@@ -112,6 +112,11 @@ const liveLabel = computed(() => {
       </div>
     </main>
 
-    <AppToast v-if="outbidMessage" :message="outbidMessage" @dismiss="outbidMessage = null" />
+    <!-- Mounted with the auction, before any message, so the message is announced when it appears. -->
+    <AppToast
+      v-if="state === 'ready'"
+      :message="outbidMessage"
+      @dismiss="outbidMessage = null"
+    />
   </div>
 </template>
