@@ -1,5 +1,6 @@
 import { createPinia, type Pinia } from 'pinia'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/vue'
+import { flushPromises } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../api/client'
@@ -311,6 +312,44 @@ describe('AuctionDetailView', () => {
 
       expect(await screen.findByText('You are the highest bidder.')).toBeTruthy()
       expect(FakeEventSource.instances).toHaveLength(1)
+    })
+
+    it('clears the outbid message when I switch user', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 2 }))
+      await renderAt('/auctions/5', 2)
+      await screen.findByText('You are the highest bidder.')
+      FakeEventSource.latest().emit(bidPlaced({ highestBidderId: 3, bidCount: 2 }))
+      await screen.findByText(/You have been outbid/)
+
+      useIdentityStore(pinia).setUser(4)
+
+      await vi.waitFor(() => expect(screen.queryByText(/You have been outbid/)).toBeNull())
+    })
+
+    it('shows my bid once when its event arrives after the page fetched it', async () => {
+      const mine = { amount: '12000.00', placedAt: '2026-10-11T10:00:00Z', bidderName: 'B***' }
+      vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail())
+      vi.mocked(fetchAuction).mockResolvedValueOnce(
+        auctionDetail({ bidCount: 1, highestBidderId: 2, minNextBid: '12100.00', bids: [mine] }),
+      )
+      vi.mocked(placeBid).mockResolvedValue({
+        id: 42,
+        auctionId: 5,
+        bidderId: 2,
+        amount: '12000.00',
+        placedAt: '2026-10-11T10:00:00Z',
+        _links: {},
+      })
+      await renderAt('/auctions/5', 2)
+      await fireEvent.update(await screen.findByLabelText('Your bid (USD)'), '12000.00')
+      await fireEvent.click(screen.getByRole('button', { name: 'Place bid' }))
+      await screen.findByText('You are the highest bidder.')
+
+      FakeEventSource.latest().emit(bidPlaced({ bidderId: 2, highestBidderId: 2, bidCount: 1 }))
+      await flushPromises()
+
+      const history = screen.getByRole('region', { name: 'Bid history' })
+      expect(within(history).getAllByRole('listitem')).toHaveLength(1)
     })
 
     it('says nothing about live updates until the stream opens, then says live', async () => {
