@@ -21,6 +21,7 @@ Given / When / Then. Each criterion maps to at least one test.
 - The server is the source of truth. An event updates the displayed state only after its type and `auctionId` are checked.
 - Events may be out of order or missed. A `bid-placed` event whose `bidCount` is lower than or equal to the one already shown is ignored. Equal covers the event for my own bid arriving after the refetch the bid panel does (007), so the history row is not added twice.
 - An applied event sets `currentBid`, `minNextBid`, `bidCount`, `highestBidderId` and `endsAt` from `data`, and prepends `{amount: data.amount, placedAt: occurredAt, bidderName: data.bidderName}` to the bid history.
+- An applied event whose `bidCount` is more than one above the shown count means events were missed (for example a bid placed before the stream opened, or one dropped by the server), so the page also refetches the auction.
 - My own winning status comes from `highestBidderId` in the event, compared to the selected user id.
 - The outbid toast appears only when the shown `highestBidderId` was my id before the event and is not after it.
 - Error counting: every `EventSource` error counts, and a successful open resets the count. While `readyState` is `CONNECTING` the browser retries by itself. When it is `CLOSED` (for example a non-stream response), the page opens a new `EventSource` after 3 seconds. At 5 errors the source is closed for good.
@@ -46,6 +47,7 @@ Consumes `GET /api/auctions/{id}/events` (009) and `GET /api/auctions/{id}` (006
 - Ignoring stale events by `bidCount` is a kata choice to handle out-of-order delivery without a sequence number.
 - Client trusts only the server's state. No optimistic updates from the client's own bids.
 - Stale events are those with `bidCount <=` the shown one (not only lower), so an own bid already refetched is not applied twice.
+- Gaps in `bidCount` trigger a refetch instead of refetching on the first open. This repairs bids missed between the first load and the stream opening once the next bid arrives, without a second request on every page load.
 - The time left ticks every second (a shared `useNow`) instead of being frozen at load time.
 - The status text stays "You are the highest bidder." from 007 rather than a new "winning" label.
 

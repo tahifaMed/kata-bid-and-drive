@@ -66,7 +66,8 @@ export function useAuctionDetail() {
 
   /**
    * Applies a live bid to the shown auction (spec 010). An event for another auction, or one not newer than
-   * what is shown (a bid count not above the shown one), is ignored. Returns whether the event was applied.
+   * what is shown (a bid count not above the shown one), is ignored. An event that skips a count also fetches
+   * the auction again. Returns whether the event was applied.
    */
   function applyBidPlaced(event: BidPlacedEvent): boolean {
     const shown = auction.value
@@ -83,6 +84,8 @@ export function useAuctionDetail() {
       endsAt,
       bids: [{ amount, placedAt: event.occurredAt, bidderName }, ...shown.bids],
     }
+    // A jump in the count means events were lost, so the missing history rows come from the server.
+    if (bidCount > shown.bidCount + 1) void refresh()
     return true
   }
 

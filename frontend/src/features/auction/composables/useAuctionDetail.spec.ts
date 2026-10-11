@@ -227,6 +227,26 @@ describe('useAuctionDetail', () => {
       expect(detail.auction.value).toBeNull()
     })
 
+    it('fetches the auction again when an event shows bids were missed', async () => {
+      const detail = await loaded({ bidCount: 3 })
+      const missed = { amount: '12300.00', placedAt: '2026-10-11T09:59:00Z', bidderName: 'C***' }
+      const latest = { amount: '12400.00', placedAt: '2026-10-11T10:00:00Z', bidderName: 'B***' }
+      vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ bidCount: 5, bids: [latest, missed] }))
+
+      detail.applyBidPlaced(bidPlaced({ bidCount: 5, amount: '12400.00' }))
+      await vi.waitFor(() => expect(detail.auction.value?.bids).toEqual([latest, missed]))
+
+      expect(fetchAuction).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not fetch again when the event follows the shown count', async () => {
+      const detail = await loaded({ bidCount: 3 })
+
+      detail.applyBidPlaced(bidPlaced({ bidCount: 4 }))
+
+      expect(fetchAuction).toHaveBeenCalledTimes(1)
+    })
+
     it('keeps a newer event when a refresh started earlier answers with fewer bids', async () => {
       const detail = await loaded()
       let answer: (auction: ReturnType<typeof auctionDetail>) => void = () => {}
