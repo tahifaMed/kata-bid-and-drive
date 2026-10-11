@@ -192,17 +192,6 @@
   gap: 1.5rem;
 }
 
-/*
- * Legacy aliases for the create-vue template pages (WelcomeItem.vue, App shell).
- * Remove this block when those pages move to the design tokens above.
- */
-:root {
-  --color-text: var(--color-ink);
-  --color-heading: var(--color-ink);
-  --color-background: var(--color-surface);
-  --section-gap: 160px;
-}
-
 #app {
   max-width: 1280px;
   margin: 0 auto;
