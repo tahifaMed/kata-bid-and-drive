@@ -15,11 +15,11 @@ afterEach(() => cleanup())
 beforeEach(() => {
   vi.mocked(fetchAuction).mockReset()
   vi.mocked(placeBid).mockReset()
-  localStorage.clear()
+  sessionStorage.clear()
 })
 
 async function renderAt(path: string, userId = 1) {
-  localStorage.setItem('bidanddrive.currentUserId', String(userId))
+  sessionStorage.setItem('bidanddrive.currentUserId', String(userId))
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [

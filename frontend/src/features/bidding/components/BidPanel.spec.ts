@@ -25,7 +25,7 @@ const BID = {
 }
 
 beforeEach(() => {
-  localStorage.clear()
+  sessionStorage.clear()
   setActivePinia(createPinia())
   // The fixture's seller is user 1, so user 2 is a buyer.
   useIdentityStore().setUser(2)

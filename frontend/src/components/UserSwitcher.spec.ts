@@ -12,7 +12,7 @@ const seededUsers = [
 ]
 
 beforeEach(() => {
-  localStorage.clear()
+  sessionStorage.clear()
   vi.spyOn(usersApi, 'fetchUsers').mockResolvedValue(seededUsers)
 })
 
