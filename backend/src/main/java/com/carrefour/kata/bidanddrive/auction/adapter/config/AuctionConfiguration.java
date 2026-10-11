@@ -5,6 +5,7 @@ import com.carrefour.kata.bidanddrive.auction.application.BidRepository;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
 import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.GetBid;
+import com.carrefour.kata.bidanddrive.auction.application.ListMyBids;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
 import com.carrefour.kata.bidanddrive.auction.application.PlaceBid;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionWindow;
@@ -43,6 +44,11 @@ class AuctionConfiguration {
 	@Bean
 	GetBid getBid(BidRepository bids) {
 		return new GetBid(bids);
+	}
+
+	@Bean
+	ListMyBids listMyBids(BidRepository bids) {
+		return new ListMyBids(bids);
 	}
 
 	@Bean

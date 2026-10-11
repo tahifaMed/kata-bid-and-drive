@@ -1,6 +1,9 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.out.persistence;
 
+import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
+import com.carrefour.kata.bidanddrive.auction.domain.Money;
+import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -68,46 +71,6 @@ class AuctionEntity {
 		this.status = status;
 	}
 
-	Long getId() {
-		return id;
-	}
-
-	long getSellerId() {
-		return sellerId;
-	}
-
-	BigDecimal getStartingPrice() {
-		return startingPrice;
-	}
-
-	BigDecimal getMinIncrement() {
-		return minIncrement;
-	}
-
-	Instant getEndsAt() {
-		return endsAt;
-	}
-
-	AuctionStatus getStatus() {
-		return status;
-	}
-
-	CarEntity getCar() {
-		return car;
-	}
-
-	BigDecimal getCurrentBid() {
-		return currentBid;
-	}
-
-	int getBidCount() {
-		return bidCount;
-	}
-
-	Long getHighestBidderId() {
-		return highestBidderId;
-	}
-
 	long getVersion() {
 		return version;
 	}
@@ -120,6 +83,22 @@ class AuctionEntity {
 		this.currentBid = amount;
 		this.highestBidderId = bidderId;
 		this.bidCount = bidCount;
+	}
+
+	/** Needs the car loaded. */
+	Auction toDomain() {
+		return new Auction(
+				id,
+				new UserId(sellerId),
+				car.toDomain(),
+				new Money(startingPrice),
+				new Money(minIncrement),
+				endsAt,
+				status,
+				currentBid == null ? null : new Money(currentBid),
+				highestBidderId == null ? null : new UserId(highestBidderId),
+				bidCount,
+				version);
 	}
 
 }

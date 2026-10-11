@@ -1,6 +1,8 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,5 +15,11 @@ public interface BidRepository {
 
 	/** The bid, if it belongs to that auction. */
 	Optional<Bid> findById(long auctionId, long bidId);
+
+	/**
+	 * Every auction the bidder has bid on, open or ended, with their highest bid there, sorted by end time,
+	 * then id. The auction and the bids are read together, so the status matches the amounts.
+	 */
+	List<BidderStanding> findStandings(UserId bidder);
 
 }

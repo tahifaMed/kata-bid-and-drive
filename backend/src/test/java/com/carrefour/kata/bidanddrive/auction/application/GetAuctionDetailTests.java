@@ -3,6 +3,7 @@ package com.carrefour.kata.bidanddrive.auction.application;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
@@ -45,6 +46,11 @@ class GetAuctionDetailTests {
 
 				@Override
 				public Optional<Bid> findById(long auctionId, long bidId) {
+					throw new UnsupportedOperationException("not used by this test");
+				}
+
+				@Override
+				public List<BidderStanding> findStandings(UserId bidder) {
 					throw new UnsupportedOperationException("not used by this test");
 				}
 			},

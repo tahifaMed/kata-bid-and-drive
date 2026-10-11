@@ -1,7 +1,7 @@
 # 008: My bids
 
 Branch: `feat/008-my-bids`  
-Status: validated
+Status: in-progress
 
 ## User story
 > As a buyer, I can see the auctions I have bid on and whether I am winning or outbid, so that I know where I stand.
@@ -28,7 +28,7 @@ Given / When / Then. Each criterion maps to at least one test. Money is a two-de
 - `myHighestBid` is the maximum of the caller's bids on that auction.
 - The list includes every auction the caller has bid on, open or ended. Ended auctions keep `WINNING` or `OUTBID` until 011 adds WON and LOST. The UI shows "Ended" instead of the time left.
 - Sort is `endsAt` ascending, then `auctionId` ascending.
-- The auction and the caller's highest bid are read in one read-only transaction, so a concurrent bid cannot pair `WINNING` with a `myHighestBid` below `currentBid`.
+- The auction and the caller's highest bid are read in one SQL statement, so a concurrent bid cannot pair `WINNING` with a `myHighestBid` below `currentBid`. Two statements in one transaction would not be enough under Postgres READ COMMITTED.
 - A malformed `X-User-Id` never queries the user list (003).
 - Status is read on demand. Live change is pushed by 010, not here.
 
@@ -46,7 +46,7 @@ Given / When / Then. Each criterion maps to at least one test. Money is a two-de
 - The frontend `AuctionResponse` type gains `myBid?: {highestAmount, status}`. The detail page does not use it yet.
 
 ## Slices
-1. Backend: `BidderStanding` domain type, `BidRepository` port for the caller's highest bid per auction, `ListMyBids`, `GET /api/me/bids` with HAL collection, sort, and 401 for missing, unknown or malformed identity. Covers criteria: 1, 2, 3, 4, 5, 7 (list).
+1. Done. Backend: `BidderStanding` domain type, `BidRepository` port for the caller's highest bid per auction, `ListMyBids`, `GET /api/me/bids` with HAL collection, sort, and 401 for missing, unknown or malformed identity. Covers criteria: 1, 2, 3, 4, 5, 7 (list).
 2. Backend: optional identity (`Optional<UserId>` with `@CurrentUser`), `GetAuctionDetail.execute(id, viewer)`, additive `myBid` on `GET /api/auctions/{id}` with `@JsonInclude(NON_NULL)`. Covers criteria: 6, 7 (detail).
 3. Frontend: `AppHeader` extracted and used by every view. Covers criteria: 10.
 4. Frontend: `MyBidsView`, `MyBidItem`, route, `myBid?` type. Covers criteria: 8, 9.
