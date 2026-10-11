@@ -1,5 +1,5 @@
 import { apiFetch } from '../../api/client'
-import type { BidResponse, PlaceBidRequest } from './types'
+import type { BidResponse, MyBidsCollection, PlaceBidRequest } from './types'
 
 /**
  * Posts a bid to the auction's `place-bid` link. Only the path is used, so the request stays on the page's
@@ -12,4 +12,9 @@ export function placeBid(placeBidHref: string, amount: string): Promise<BidRespo
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   })
+}
+
+/** Every auction the selected user bid on, with where they stand (spec 008). */
+export function fetchMyBids(): Promise<MyBidsCollection> {
+  return apiFetch<MyBidsCollection>('/api/me/bids')
 }

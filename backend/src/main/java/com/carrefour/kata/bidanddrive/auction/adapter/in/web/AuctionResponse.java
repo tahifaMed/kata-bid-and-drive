@@ -3,9 +3,12 @@ package com.carrefour.kata.bidanddrive.auction.adapter.in.web;
 import com.carrefour.kata.bidanddrive.auction.application.AuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.net.URI;
 import java.time.Instant;
@@ -13,7 +16,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** The 006 detail shape. The 004 create response uses it too (ADR 0010). */
+/**
+ * The 006 detail shape. The 004 create response uses it too (ADR 0010).
+ * {@code myBid} (spec 008) is omitted, not null, when there is no viewer standing.
+ */
 public record AuctionResponse(
 		Long id,
 		AuctionStatus status,
@@ -28,7 +34,8 @@ public record AuctionResponse(
 		Long highestBidderId,
 		Instant endsAt,
 		List<BidResponse> bids,
-		Map<String, Link> _links) {
+		Map<String, Link> _links,
+		@JsonInclude(JsonInclude.Include.NON_NULL) MyBid myBid) {
 
 	public static AuctionResponse of(AuctionDetail detail, URI self) {
 		Auction auction = detail.auction();
@@ -51,7 +58,8 @@ public record AuctionResponse(
 				auction.highestBidderId().map(UserId::value).orElse(null),
 				auction.endsAt(),
 				detail.bids().stream().map(BidResponse::from).toList(),
-				links);
+				links,
+				detail.myBid() == null ? null : MyBid.from(detail.myBid()));
 	}
 
 	private static String text(Money money) {
@@ -79,6 +87,14 @@ public record AuctionResponse(
 
 		static BidResponse from(AuctionDetail.HistoryEntry entry) {
 			return new BidResponse(text(entry.amount()), entry.placedAt(), entry.bidderName());
+		}
+	}
+
+	/** The viewer's own position on this auction (spec 008). */
+	public record MyBid(String highestAmount, BidderStatus status) {
+
+		static MyBid from(BidderStanding standing) {
+			return new MyBid(text(standing.myHighestBid()), standing.status());
 		}
 	}
 

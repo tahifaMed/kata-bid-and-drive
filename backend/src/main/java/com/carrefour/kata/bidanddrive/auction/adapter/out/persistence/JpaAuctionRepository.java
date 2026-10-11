@@ -6,8 +6,6 @@ import com.carrefour.kata.bidanddrive.auction.application.PageQuery;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
-import com.carrefour.kata.bidanddrive.auction.domain.Money;
-import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -40,7 +38,7 @@ class JpaAuctionRepository implements AuctionRepository {
 				auction.endsAt(),
 				auction.status());
 		entity.attachCar(new CarEntity(entity, auction.car()));
-		return toDomain(repository.save(entity));
+		return repository.save(entity).toDomain();
 	}
 
 	/**
@@ -65,28 +63,13 @@ class JpaAuctionRepository implements AuctionRepository {
 		Pageable pageable = PageRequest.of(query.number(), query.size(),
 				Sort.by("endsAt").ascending().and(Sort.by("id").ascending()));
 		Slice<AuctionEntity> slice = repository.findByStatusAndEndsAtAfter(AuctionStatus.OPEN, now, pageable);
-		List<Auction> items = slice.getContent().stream().map(this::toDomain).toList();
+		List<Auction> items = slice.getContent().stream().map(AuctionEntity::toDomain).toList();
 		return new AuctionPage<>(items, query.number(), query.size(), slice.hasNext());
 	}
 
 	@Override
 	public Optional<Auction> findById(long id) {
-		return repository.findWithCarById(id).map(this::toDomain);
-	}
-
-	private Auction toDomain(AuctionEntity entity) {
-		return new Auction(
-				entity.getId(),
-				new UserId(entity.getSellerId()),
-				entity.getCar().toDomain(),
-				new Money(entity.getStartingPrice()),
-				new Money(entity.getMinIncrement()),
-				entity.getEndsAt(),
-				entity.getStatus(),
-				entity.getCurrentBid() == null ? null : new Money(entity.getCurrentBid()),
-				entity.getHighestBidderId() == null ? null : new UserId(entity.getHighestBidderId()),
-				entity.getBidCount(),
-				entity.getVersion());
+		return repository.findWithCarById(id).map(AuctionEntity::toDomain);
 	}
 
 }

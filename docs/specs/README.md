@@ -33,8 +33,8 @@ Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) 
 - **Money**: `BigDecimal`, scale 2, sent as a JSON string ([ADR 0004](../adr/0004-money-as-json-string.md)).
 - **Time**: `Instant`, ISO-8601 UTC. The server uses an injected `Clock`.
 - **Errors**: RFC 9457 ProblemDetail. 400 invalid input, 401 missing or unknown identity, 403 wrong role, 404 unknown resource, 409 state conflict, 422 business rule on amount.
-- **Identity**: `X-User-Id` header ([ADR 0001](../adr/0001-identity-user-switcher.md)). Read endpoints for auctions are public. Anything under `/api/me` needs identity.
-- **Hypermedia**: HAL responses with `_links`. Collections use HAL paged models.
+- **Identity**: `X-User-Id` header ([ADR 0001](../adr/0001-identity-user-switcher.md)). Read endpoints for auctions are public and ignore an invalid id ([ADR 0014](../adr/0014-optional-identity-on-public-reads.md)). Anything under `/api/me` needs identity.
+- **Hypermedia**: HAL responses with `_links`. Collections use HAL paged models, except small per-user lists under `/api/me` (008).
 - **Paging**: `page` is 0-based, `size` defaults to 20 and is capped at 100.
 - **Live events**: SSE with envelope `{type, auctionId, occurredAt, data}` ([ADR 0002](../adr/0002-sse-over-websocket.md)). Event types: `bid-placed` (009), `auction-closed` (011).
 
@@ -45,3 +45,4 @@ Specs 011, 012 and 013 are additive. Each owns its own migration (V5, none, V6) 
 - [ADR 0004](../adr/0004-money-as-json-string.md): money as JSON strings.
 - [ADR 0005](../adr/0005-bid-error-mapping.md): bid status codes and check order.
 - [ADR 0006](../adr/0006-bidding-rules.md): seller cannot bid, no self-outbid, first-bid rule.
+- [ADR 0014](../adr/0014-optional-identity-on-public-reads.md): public reads treat an invalid identity as anonymous.

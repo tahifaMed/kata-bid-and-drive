@@ -7,9 +7,11 @@ import com.carrefour.kata.bidanddrive.auction.application.GetAuctionDetail;
 import com.carrefour.kata.bidanddrive.auction.application.ListOpenAuctions;
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
+import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,9 +24,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.given;
@@ -174,8 +178,37 @@ class AuctionDetailControllerTests {
 	void the_detail_is_public_and_ignores_an_unknown_or_malformed_identity(String identity) throws Exception {
 		given(getAuctionDetail.execute(5)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
 
-		mockMvc.perform(get("/api/auctions/5")).andExpect(status().isOk());
-		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", identity)).andExpect(status().isOk());
+		mockMvc.perform(get("/api/auctions/5"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", not(hasKey("myBid"))));
+		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", identity))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", not(hasKey("myBid"))));
+	}
+
+	@Test
+	void a_bidder_sees_their_highest_bid_and_status() throws Exception {
+		UserId bob = new UserId(2);
+		given(users.findById(bob)).willReturn(Optional.of(new User(bob, "Bob")));
+		Auction auction = auction();
+		given(getAuctionDetail.execute(5, bob)).willReturn(new AuctionDetail(auction, "Alice", List.of(), true,
+				new BidderStanding(auction, bob, money("12000.00"))));
+
+		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", "2"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.myBid.highestAmount").value("12000.00"))
+				.andExpect(jsonPath("$.myBid.status").value("OUTBID"));
+	}
+
+	@Test
+	void a_known_user_without_a_bid_gets_no_my_bid() throws Exception {
+		UserId chloe = new UserId(3);
+		given(users.findById(chloe)).willReturn(Optional.of(new User(chloe, "Chloe")));
+		given(getAuctionDetail.execute(5, chloe)).willReturn(new AuctionDetail(auction(), "Alice", List.of(), true));
+
+		mockMvc.perform(get("/api/auctions/5").header("X-User-Id", "3"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", not(hasKey("myBid"))));
 	}
 
 	private static Auction auction() {

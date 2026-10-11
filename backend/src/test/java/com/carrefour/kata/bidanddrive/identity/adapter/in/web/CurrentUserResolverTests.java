@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class CurrentUserResolverTests {
 
 	private static final String PROBE = "/api/probe/whoami";
+	private static final String OPTIONAL_PROBE = "/api/probe/whoami-optional";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -61,6 +62,34 @@ class CurrentUserResolverTests {
 				.andExpect(status().isUnauthorized());
 		mockMvc.perform(get(PROBE).header("X-User-Id", "0"))
 				.andExpect(status().isUnauthorized());
+
+		verifyNoInteractions(userDirectory);
+	}
+
+	@Test
+	void an_optional_identity_resolves_a_known_user() throws Exception {
+		given(userDirectory.findById(new UserId(2))).willReturn(Optional.of(new User(new UserId(2), "Bob")));
+
+		mockMvc.perform(get(OPTIONAL_PROBE).header("X-User-Id", "2"))
+				.andExpect(status().isOk())
+				.andExpect(content().string("2"));
+	}
+
+	@Test
+	void an_optional_identity_is_anonymous_when_missing_or_unknown() throws Exception {
+		given(userDirectory.findById(new UserId(99))).willReturn(Optional.empty());
+
+		mockMvc.perform(get(OPTIONAL_PROBE)).andExpect(status().isOk()).andExpect(content().string("anonymous"));
+		mockMvc.perform(get(OPTIONAL_PROBE).header("X-User-Id", "99"))
+				.andExpect(status().isOk())
+				.andExpect(content().string("anonymous"));
+	}
+
+	@Test
+	void an_optional_identity_is_anonymous_when_malformed_without_looking_up_users() throws Exception {
+		mockMvc.perform(get(OPTIONAL_PROBE).header("X-User-Id", "abc"))
+				.andExpect(status().isOk())
+				.andExpect(content().string("anonymous"));
 
 		verifyNoInteractions(userDirectory);
 	}

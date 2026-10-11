@@ -65,4 +65,6 @@ export interface AuctionResponse {
   bids: AuctionBid[]
   /** `place-bid` is present only while the auction takes bids. */
   _links: Record<string, { href: string }>
+  /** The selected user's own bid, present only when they bid on this auction (spec 008). */
+  myBid?: { highestAmount: string; status: 'WINNING' | 'OUTBID' }
 }

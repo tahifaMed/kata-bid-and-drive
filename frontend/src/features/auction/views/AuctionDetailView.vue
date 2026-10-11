@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import UserSwitcher from '../../../components/UserSwitcher.vue'
+import AppHeader from '../../../components/AppHeader.vue'
 import BidPanel from '../../bidding/components/BidPanel.vue'
 import BidHistory from '../components/BidHistory.vue'
 import CarDetails from '../components/CarDetails.vue'
@@ -23,17 +23,7 @@ const biddable = computed(() => Boolean(auction.value?._links['place-bid']))
 
 <template>
   <div class="min-h-dvh">
-    <header class="border-b border-border">
-      <div class="container-app flex flex-wrap items-center gap-x-6 gap-y-3 py-4">
-        <RouterLink to="/" class="text-lg font-bold no-underline">BidAndDrive</RouterLink>
-        <nav class="flex flex-wrap items-center gap-x-4" aria-label="Main">
-          <RouterLink to="/auctions" class="no-underline">Auctions</RouterLink>
-        </nav>
-        <div class="flex w-full flex-wrap items-center gap-3 sm:ml-auto sm:w-auto">
-          <UserSwitcher />
-        </div>
-      </div>
-    </header>
+    <AppHeader />
 
     <main class="container-app stack-section py-6">
       <p>

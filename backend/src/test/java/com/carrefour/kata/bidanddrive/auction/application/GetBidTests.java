@@ -1,6 +1,7 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
+import com.carrefour.kata.bidanddrive.auction.domain.BidderStanding;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,16 @@ class GetBidTests {
 		@Override
 		public Optional<Bid> findById(long auctionId, long bidId) {
 			return auctionId == 5 && bidId == 12 ? Optional.of(BOBS_BID) : Optional.empty();
+		}
+
+		@Override
+		public Optional<BidderStanding> findStanding(long auctionId, UserId bidder) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
+		public List<BidderStanding> findStandings(UserId bidder) {
+			throw new UnsupportedOperationException("not used by this test");
 		}
 	});
 

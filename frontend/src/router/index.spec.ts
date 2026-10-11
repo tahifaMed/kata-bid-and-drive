@@ -7,6 +7,10 @@ describe('router', () => {
     expect(router.resolve('/auctions/5').params.id).toBe('5')
   })
 
+  it('opens my bids from its own path, as the header links to it', () => {
+    expect(router.resolve('/me/bids').name).toBe('my-bids')
+  })
+
   it('keeps the sell page on its own path', () => {
     expect(router.resolve('/auctions/new').name).toBe('auctions-new')
   })

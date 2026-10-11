@@ -27,7 +27,19 @@ class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 	@Override
 	public UserId resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
 			NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-		var userId = parse(webRequest.getHeader(HEADER));
+		try {
+			return resolve(webRequest.getHeader(HEADER));
+		} catch (UnauthorizedUserException anonymous) {
+			if (parameter.getParameterAnnotation(CurrentUser.class).required()) {
+				throw anonymous;
+			}
+			return null;
+		}
+	}
+
+	/** A malformed id is rejected before the user list is queried. */
+	private UserId resolve(String header) {
+		var userId = parse(header);
 		return userDirectory.findById(userId)
 				.map(user -> user.id())
 				.orElseThrow(UnauthorizedUserException::new);
