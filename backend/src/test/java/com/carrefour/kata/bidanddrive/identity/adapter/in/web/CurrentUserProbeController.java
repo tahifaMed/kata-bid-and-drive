@@ -13,4 +13,9 @@ class CurrentUserProbeController {
 		return String.valueOf(userId.value());
 	}
 
+	@GetMapping("/api/probe/whoami-optional")
+	String whoamiOptional(@CurrentUser(required = false) UserId userId) {
+		return userId == null ? "anonymous" : String.valueOf(userId.value());
+	}
+
 }

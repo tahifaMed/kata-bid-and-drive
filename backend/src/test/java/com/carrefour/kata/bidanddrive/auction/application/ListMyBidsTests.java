@@ -37,6 +37,11 @@ class ListMyBidsTests {
 		}
 
 		@Override
+		public Optional<BidderStanding> findStanding(long auctionId, UserId bidder) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
 		public List<BidderStanding> findStandings(UserId bidder) {
 			return bidder.equals(BOB) ? List.of(BOBS_STANDING) : List.of();
 		}

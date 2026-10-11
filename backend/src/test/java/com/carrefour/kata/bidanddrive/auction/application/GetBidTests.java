@@ -32,6 +32,11 @@ class GetBidTests {
 		}
 
 		@Override
+		public Optional<BidderStanding> findStanding(long auctionId, UserId bidder) {
+			throw new UnsupportedOperationException("not used by this test");
+		}
+
+		@Override
 		public List<BidderStanding> findStandings(UserId bidder) {
 			throw new UnsupportedOperationException("not used by this test");
 		}

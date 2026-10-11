@@ -16,6 +16,9 @@ public interface BidRepository {
 	/** The bid, if it belongs to that auction. */
 	Optional<Bid> findById(long auctionId, long bidId);
 
+	/** The bidder's standing on one auction, read like {@link #findStandings}. Empty if they never bid there. */
+	Optional<BidderStanding> findStanding(long auctionId, UserId bidder);
+
 	/**
 	 * Every auction the bidder has bid on, open or ended, with their highest bid there, sorted by end time,
 	 * then id. The auction and the bids are read together, so the status matches the amounts.

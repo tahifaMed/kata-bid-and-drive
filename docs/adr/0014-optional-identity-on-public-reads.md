@@ -8,7 +8,7 @@ Status: Accepted
 ## Decision
 - On a public read, identity is optional. A missing, malformed or unknown `X-User-Id` is treated as anonymous: no 401, and per-user fields such as `myBid` are left out.
 - Endpoints that need identity keep the 401 rule.
-- The web layer resolves an optional identity as `@CurrentUser Optional<UserId>`, next to the required `@CurrentUser UserId`. A malformed id is rejected before the user list is queried (003).
+- The web layer marks an optional identity with `@CurrentUser(required = false) UserId`, which is null for an anonymous caller. The default stays required. A malformed id is rejected before the user list is queried (003).
 
 ## Consequences
 - Earlier clients and the existing public-detail tests are unaffected.

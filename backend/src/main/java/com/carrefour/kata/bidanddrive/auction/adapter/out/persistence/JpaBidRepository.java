@@ -37,11 +37,21 @@ class JpaBidRepository implements BidRepository {
 	}
 
 	@Override
+	public Optional<BidderStanding> findStanding(long auctionId, UserId bidder) {
+		return repository.findStanding(auctionId, bidder.value()).stream()
+				.map(row -> toStanding(row, bidder))
+				.findFirst();
+	}
+
+	@Override
 	public List<BidderStanding> findStandings(UserId bidder) {
 		return repository.findStandings(bidder.value()).stream()
-				.map(row -> new BidderStanding(((AuctionEntity) row[0]).toDomain(), bidder,
-						new Money((BigDecimal) row[1])))
+				.map(row -> toStanding(row, bidder))
 				.toList();
+	}
+
+	private static BidderStanding toStanding(Object[] row, UserId bidder) {
+		return new BidderStanding(((AuctionEntity) row[0]).toDomain(), bidder, new Money((BigDecimal) row[1]));
 	}
 
 }

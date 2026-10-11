@@ -106,6 +106,20 @@ class BidderStandingPersistenceTests {
 		assertThat(standingsOn(BOB, id)).isEmpty();
 	}
 
+	@Test
+	void one_auction_gives_the_bidders_standing_there_or_nothing() {
+		long id = newAuction(now.plus(Duration.ofDays(1)));
+		record(id, BOB, "1000.00");
+		record(id, DAN, "1100.00");
+
+		BidderStanding bobs = bids.findStanding(id, BOB).orElseThrow();
+		assertThat(bobs.myHighestBid()).isEqualTo(money("1000.00"));
+		assertThat(bobs.status()).isEqualTo(BidderStatus.OUTBID);
+		assertThat(bids.findStanding(id, DAN).orElseThrow().status()).isEqualTo(BidderStatus.WINNING);
+		assertThat(bids.findStanding(id, CHLOE)).isEmpty();
+		assertThat(bids.findStanding(newAuction(now.plus(Duration.ofDays(1))), BOB)).isEmpty();
+	}
+
 	private List<BidderStanding> standingsOn(UserId bidder, Long... auctionIds) {
 		Set<Long> ids = Set.of(auctionIds);
 		return bids.findStandings(bidder).stream()

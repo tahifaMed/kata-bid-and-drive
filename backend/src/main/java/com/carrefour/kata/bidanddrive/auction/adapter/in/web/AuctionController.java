@@ -51,10 +51,14 @@ class AuctionController {
 		this.users = users;
 	}
 
-	/** Public, like the list. A non-numeric id is a 400 through the type mismatch handler. */
+	/**
+	 * Public, like the list. A non-numeric id is a 400 through the type mismatch handler.
+	 * A known viewer also gets {@code myBid}; a missing, malformed or unknown one is anonymous (ADR 0014).
+	 */
 	@GetMapping("/{id}")
-	AuctionResponse detail(@PathVariable long id) {
-		return AuctionResponse.of(getAuctionDetail.execute(id), auctionUri(id));
+	AuctionResponse detail(@CurrentUser(required = false) UserId viewer, @PathVariable long id) {
+		AuctionDetail detail = viewer == null ? getAuctionDetail.execute(id) : getAuctionDetail.execute(id, viewer);
+		return AuctionResponse.of(detail, auctionUri(id));
 	}
 
 	/** Public: no identity is needed to browse. Paging bounds are checked before the use case runs. */

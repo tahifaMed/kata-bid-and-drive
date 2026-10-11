@@ -6,8 +6,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Marks a controller parameter of type UserId that must be filled from the X-User-Id header. */
+/**
+ * Marks a controller parameter of type UserId that is filled from the X-User-Id header.
+ * When required, a missing or unknown id is a 401. When not required, it is null instead (ADR 0014).
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface CurrentUser {}
+public @interface CurrentUser {
+
+	boolean required() default true;
+
+}

@@ -26,4 +26,13 @@ interface BidJpaRepository extends JpaRepository<BidEntity, Long> {
 			""")
 	List<Object[]> findStandings(@Param("bidderId") long bidderId);
 
+	/** {@link #findStandings} for one auction. */
+	@Query("""
+			select a, (select max(b.amount) from BidEntity b where b.auctionId = a.id and b.bidderId = :bidderId)
+			from AuctionEntity a join fetch a.car
+			where a.id = :auctionId
+			and exists (select 1 from BidEntity mine where mine.auctionId = a.id and mine.bidderId = :bidderId)
+			""")
+	List<Object[]> findStanding(@Param("auctionId") long auctionId, @Param("bidderId") long bidderId);
+
 }

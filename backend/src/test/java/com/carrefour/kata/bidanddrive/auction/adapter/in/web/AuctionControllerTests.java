@@ -44,6 +44,7 @@ class AuctionControllerTests {
 				.andExpect(jsonPath("$.bidCount").value(0))
 				.andExpect(jsonPath("$.highestBidderId").doesNotExist())
 				.andExpect(jsonPath("$.bids").isEmpty())
+				.andExpect(jsonPath("$", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasKey("myBid"))))
 				.andExpect(jsonPath("$._links.self.href").value(org.hamcrest.Matchers.matchesPattern(".*/api/auctions/\\d+")))
 				.andExpect(jsonPath("$._links.place-bid.href").value(org.hamcrest.Matchers.endsWith("/bids")));
 	}

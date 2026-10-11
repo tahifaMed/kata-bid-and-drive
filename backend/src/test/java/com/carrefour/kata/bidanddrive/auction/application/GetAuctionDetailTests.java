@@ -36,6 +36,7 @@ class GetAuctionDetailTests {
 	private final FakeUsers users = new FakeUsers(
 			new User(ALICE, "Alice"), new User(BOB, "Bob"), new User(CAROL, "Carol"));
 	private final List<Integer> requestedLimits = new ArrayList<>();
+	private final Map<UserId, BidderStanding> standingsOnFive = new HashMap<>();
 	private final GetAuctionDetail getAuctionDetail = new GetAuctionDetail(auctions,
 			new BidRepository() {
 				@Override
@@ -47,6 +48,11 @@ class GetAuctionDetailTests {
 				@Override
 				public Optional<Bid> findById(long auctionId, long bidId) {
 					throw new UnsupportedOperationException("not used by this test");
+				}
+
+				@Override
+				public Optional<BidderStanding> findStanding(long auctionId, UserId bidder) {
+					return auctionId == 5 ? Optional.ofNullable(standingsOnFive.get(bidder)) : Optional.empty();
 				}
 
 				@Override
@@ -109,6 +115,24 @@ class GetAuctionDetailTests {
 				new AuctionDetail.HistoryEntry(money("12200.00"), NOW.minusSeconds(10), "B***"),
 				new AuctionDetail.HistoryEntry(money("12100.00"), NOW.minusSeconds(20), "C***"),
 				new AuctionDetail.HistoryEntry(money("12000.00"), NOW.minusSeconds(30), "B***"));
+	}
+
+	@Test
+	void a_viewer_who_bid_gets_their_standing() {
+		Auction auction = auction(5, NOW.plusSeconds(3600));
+		auctions.add(auction);
+		BidderStanding bobs = new BidderStanding(auction, BOB, money("12000.00"));
+		standingsOnFive.put(BOB, bobs);
+
+		assertThat(getAuctionDetail.execute(5, BOB).myBid()).isEqualTo(bobs);
+	}
+
+	@Test
+	void a_viewer_who_did_not_bid_and_an_anonymous_caller_get_no_standing() {
+		auctions.add(auction(5, NOW.plusSeconds(3600)));
+
+		assertThat(getAuctionDetail.execute(5, CAROL).myBid()).isNull();
+		assertThat(getAuctionDetail.execute(5).myBid()).isNull();
 	}
 
 	@Test

@@ -22,6 +22,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -60,6 +62,27 @@ class MyBidsApiTests {
 	}
 
 	@Test
+	void the_detail_shows_my_bid_to_its_bidder_only_and_follows_an_outbid() throws Exception {
+		long id = openAuction();
+		bid(id, "2", "1000.00").andExpect(status().isCreated());
+
+		detail(id, "2")
+				.andExpect(jsonPath("$.myBid.highestAmount").value("1000.00"))
+				.andExpect(jsonPath("$.myBid.status").value("WINNING"));
+
+		bid(id, "4", "1100.00").andExpect(status().isCreated());
+
+		detail(id, "2")
+				.andExpect(jsonPath("$.myBid.highestAmount").value("1000.00"))
+				.andExpect(jsonPath("$.myBid.status").value("OUTBID"));
+		detail(id, "1").andExpect(status().isOk()).andExpect(jsonPath("$", not(hasKey("myBid"))));
+		detail(id, "999").andExpect(status().isOk()).andExpect(jsonPath("$", not(hasKey("myBid"))));
+		mockMvc.perform(get("/api/auctions/{id}", id))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", not(hasKey("myBid"))));
+	}
+
+	@Test
 	void without_an_identity_the_list_is_unauthorized() throws Exception {
 		mockMvc.perform(get("/api/me/bids")).andExpect(status().isUnauthorized());
 		myBids("999").andExpect(status().isUnauthorized());
@@ -67,6 +90,10 @@ class MyBidsApiTests {
 
 	private JsonPathResultMatchers item(long auctionId, String field) {
 		return jsonPath("$._embedded.myBids[?(@.auctionId == " + auctionId + ")]." + field);
+	}
+
+	private ResultActions detail(long auctionId, String userId) throws Exception {
+		return mockMvc.perform(get("/api/auctions/{id}", auctionId).header("X-User-Id", userId));
 	}
 
 	private ResultActions myBids(String userId) throws Exception {

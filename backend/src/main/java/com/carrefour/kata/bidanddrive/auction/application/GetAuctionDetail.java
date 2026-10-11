@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Reads one auction with its seller and its newest bids. Public: no identity is needed. */
+/**
+ * Reads one auction with its seller and its newest bids. Public: no identity is needed.
+ * A known viewer also gets their own standing on it (spec 008).
+ */
 public class GetAuctionDetail {
 
 	private final AuctionRepository auctions;
@@ -26,6 +29,14 @@ public class GetAuctionDetail {
 		this.bids = bids;
 		this.users = users;
 		this.clock = clock;
+	}
+
+	public AuctionDetail execute(long id, UserId viewer) {
+		AuctionDetail detail = execute(id);
+		return bids.findStanding(id, viewer)
+				.map(standing -> new AuctionDetail(detail.auction(), detail.sellerName(), detail.bids(),
+						detail.biddable(), standing))
+				.orElse(detail);
 	}
 
 	public AuctionDetail execute(long id) {
