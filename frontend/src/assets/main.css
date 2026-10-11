@@ -125,16 +125,6 @@
       text-meta font-semibold text-white;
   }
 
-  /* Underlined sort tabs, 44px minimum touch height */
-  .tab {
-    @apply inline-flex min-h-11 items-center border-b-2 border-transparent text-meta
-      text-ink-muted no-underline hover:text-ink;
-  }
-
-  .tab-active {
-    @apply border-ink font-semibold text-ink;
-  }
-
   /* Auction card */
   .auction-card {
     @apply flex flex-col gap-2 text-ink no-underline;

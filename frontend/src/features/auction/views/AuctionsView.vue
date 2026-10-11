@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
 import AppHeader from '../../../components/AppHeader.vue'
 import { fetchOpenAuctions } from '../api'
 import AuctionCard from '../components/AuctionCard.vue'
 import type { AuctionListPage } from '../types'
-
-// Static page: filters and sort tabs are not wired yet.
-const filters = ['Years', 'Transmission', 'Body style']
-const sortTabs = ['Ending soon', 'Newly listed', 'No reserve', 'Lowest mileage', 'Closest to me']
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -42,57 +37,10 @@ onMounted(() => load(0))
 
 <template>
   <div class="min-h-dvh">
-    <AppHeader>
-      <template #search>
-        <label for="auction-search" class="sr-only">Search auctions</label>
-        <input
-          id="auction-search"
-          type="search"
-          class="field sm:w-80"
-          placeholder="Search for cars (ex. BMW, Audi, Ford)"
-        />
-      </template>
-      <RouterLink to="/auctions/new" class="btn btn-outline">Sell a car</RouterLink>
-      <button type="button" class="btn btn-primary">Sign up</button>
-    </AppHeader>
+    <AppHeader />
 
     <main class="container-app stack-section py-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3">
-          <h1 class="text-display font-bold">Live auctions</h1>
-          <button
-            v-for="filter in filters"
-            :key="filter"
-            type="button"
-            class="btn btn-outline px-4 text-meta font-normal"
-          >
-            {{ filter }}
-            <svg
-              aria-hidden="true"
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M2.5 4.5 6 8l3.5-3.5" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="flex flex-wrap gap-x-4 gap-y-2" role="group" aria-label="Sort auctions">
-          <button
-            v-for="(tab, index) in sortTabs"
-            :key="tab"
-            type="button"
-            :class="['tab', index === 0 && 'tab-active']"
-            :aria-pressed="index === 0 ? 'true' : 'false'"
-          >
-            {{ tab }}
-          </button>
-        </div>
-      </div>
+      <h1 class="text-display font-bold">Live auctions</h1>
 
       <p v-if="state === 'loading'" role="status" class="text-ink-muted">Loading auctions…</p>
 

@@ -149,4 +149,14 @@ describe('AuctionsView', () => {
       '/auctions/new',
     )
   })
+
+  it('shows no controls that are not wired up', () => {
+    vi.mocked(fetchOpenAuctions).mockReturnValue(new Promise(() => {}))
+    renderView()
+
+    expect(screen.queryByRole('button', { name: 'Sign up' })).toBeNull()
+    expect(screen.queryByRole('searchbox')).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Sort auctions' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Years|Transmission|Body style/ })).toBeNull()
+  })
 })
