@@ -6,10 +6,13 @@ import BidPanel from '../../bidding/components/BidPanel.vue'
 import BidHistory from '../components/BidHistory.vue'
 import CarDetails from '../components/CarDetails.vue'
 import PriceSummary from '../components/PriceSummary.vue'
+import { useNow } from '../../../composables/useNow'
 import { useAuctionDetail } from '../composables/useAuctionDetail'
+import { useAuctionStream } from '../composables/useAuctionStream'
 
 const route = useRoute()
-const { state, auction, loadedAt, load, retry, refresh } = useAuctionDetail()
+const { state, auction, load, retry, refresh, applyBidPlaced } = useAuctionDetail()
+const now = useNow()
 
 // The same view is reused when only the id changes, so watch the param instead of loading once.
 watch(
@@ -19,6 +22,13 @@ watch(
 )
 
 const biddable = computed(() => Boolean(auction.value?._links['place-bid']))
+
+// Only an auction that was found gets a stream, so an unknown id does not retry against a 404.
+const streamedId = computed(() => (state.value === 'ready' ? (auction.value?.id ?? null) : null))
+useAuctionStream(streamedId, {
+  onBidPlaced: applyBidPlaced,
+  onReconnected: refresh,
+})
 </script>
 
 <template>
@@ -48,7 +58,7 @@ const biddable = computed(() => Boolean(auction.value?._links['place-bid']))
         <div class="stack-section">
           <section class="stack" aria-labelledby="price-title">
             <h2 id="price-title" class="text-title font-bold">Price</h2>
-            <PriceSummary :auction="auction" :now="loadedAt" />
+            <PriceSummary :auction="auction" :now="now" />
           </section>
 
           <!-- Only an auction that takes bids gets the bid panel. -->
