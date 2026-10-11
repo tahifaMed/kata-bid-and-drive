@@ -1,5 +1,6 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.config;
 
+import com.carrefour.kata.bidanddrive.auction.application.AuctionEventPublisher;
 import com.carrefour.kata.bidanddrive.auction.application.AuctionRepository;
 import com.carrefour.kata.bidanddrive.auction.application.BidRepository;
 import com.carrefour.kata.bidanddrive.auction.application.CreateAuction;
@@ -52,8 +53,8 @@ class AuctionConfiguration {
 	}
 
 	@Bean
-	PlaceBid placeBid(AuctionRepository auctions, Clock clock) {
-		return new PlaceBid(auctions, clock);
+	PlaceBid placeBid(AuctionRepository auctions, Clock clock, UserDirectory users, AuctionEventPublisher events) {
+		return new PlaceBid(auctions, clock, users, events);
 	}
 
 }

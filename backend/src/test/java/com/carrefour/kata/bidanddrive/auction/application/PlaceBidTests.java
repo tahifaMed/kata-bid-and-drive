@@ -1,11 +1,15 @@
 package com.carrefour.kata.bidanddrive.auction.application;
 
 import com.carrefour.kata.bidanddrive.auction.domain.Auction;
+import com.carrefour.kata.bidanddrive.auction.domain.AuctionEvent;
 import com.carrefour.kata.bidanddrive.auction.domain.AuctionStatus;
 import com.carrefour.kata.bidanddrive.auction.domain.Bid;
+import com.carrefour.kata.bidanddrive.auction.domain.BidPlaced;
 import com.carrefour.kata.bidanddrive.auction.domain.Car;
 import com.carrefour.kata.bidanddrive.auction.domain.Money;
 import com.carrefour.kata.bidanddrive.auction.domain.SellerCannotBidException;
+import com.carrefour.kata.bidanddrive.identity.application.UserDirectory;
+import com.carrefour.kata.bidanddrive.identity.domain.User;
 import com.carrefour.kata.bidanddrive.identity.domain.UserId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,7 +19,9 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,7 +35,9 @@ class PlaceBidTests {
 	private static final UserId BOB = new UserId(2);
 
 	private final FakeAuctions auctions = new FakeAuctions();
-	private final PlaceBid placeBid = new PlaceBid(auctions, Clock.fixed(NOW, ZoneOffset.UTC));
+	private final FakeUsers users = new FakeUsers(new User(BOB, "Bob"));
+	private final List<AuctionEvent> published = new ArrayList<>();
+	private final PlaceBid placeBid = new PlaceBid(auctions, Clock.fixed(NOW, ZoneOffset.UTC), users, published::add);
 
 	@Test
 	void an_accepted_bid_is_recorded_with_the_new_totals_and_the_clock_time() {
@@ -41,6 +49,34 @@ class PlaceBidTests {
 		assertThat(auctions.recorded.currentBid()).isEqualTo(money("1000.00"));
 		assertThat(auctions.recorded.bidCount()).isEqualTo(1);
 		assertThat(auctions.recorded.highestBidderId()).contains(BOB);
+	}
+
+	@Test
+	void an_accepted_bid_publishes_bid_placed_with_the_saved_id_and_the_masked_name() {
+		auctions.add(auction());
+
+		placeBid.execute(5, BOB, new RawAmount("1000.00"));
+
+		assertThat(published).containsExactly(new BidPlaced(5, NOW, 99L, money("1000.00"), BOB, "B***", BOB,
+				money("1000.00"), money("1100.00"), 1, NOW.plusSeconds(3600), false));
+	}
+
+	@Test
+	void a_rejected_bid_publishes_nothing() {
+		auctions.add(auction());
+
+		assertThatThrownBy(() -> placeBid.execute(5, SELLER, new RawAmount("1000.00")))
+				.isInstanceOf(SellerCannotBidException.class);
+		assertThat(published).isEmpty();
+	}
+
+	@Test
+	void a_bidder_missing_from_the_directory_is_broken_data_and_publishes_nothing() {
+		auctions.add(auction());
+
+		assertThatThrownBy(() -> placeBid.execute(5, new UserId(3), new RawAmount("1000.00")))
+				.isInstanceOf(IllegalStateException.class);
+		assertThat(published).isEmpty();
 	}
 
 	@Test
@@ -96,6 +132,20 @@ class PlaceBidTests {
 
 	private static Money money(String amount) {
 		return new Money(new BigDecimal(amount));
+	}
+
+	private record FakeUsers(User user) implements UserDirectory {
+
+		@Override
+		public List<User> findAll() {
+			return List.of(user);
+		}
+
+		@Override
+		public Optional<User> findById(UserId id) {
+			return user.id().equals(id) ? Optional.of(user) : Optional.empty();
+		}
+
 	}
 
 	private static class FakeAuctions implements AuctionRepository {
