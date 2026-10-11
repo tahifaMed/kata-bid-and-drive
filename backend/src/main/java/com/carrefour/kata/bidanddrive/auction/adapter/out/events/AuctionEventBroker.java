@@ -21,13 +21,26 @@ public class AuctionEventBroker {
 	private static final Logger log = LoggerFactory.getLogger(AuctionEventBroker.class);
 
 	private final Map<Long, List<EventSink>> subscribers = new ConcurrentHashMap<>();
+	private volatile boolean closed;
 
-	/** Sends a {@code connected} comment at once: an SSE response is only flushed on its first write. */
+	/**
+	 * Sends a {@code connected} comment at once: an SSE response is only flushed on its first write.
+	 * The add runs inside {@code compute}, so it cannot land on a list that a last unsubscribe just dropped.
+	 * After {@link #closeAll()}, a new stream is ended at once and the client reconnects elsewhere.
+	 */
 	public void subscribe(long auctionId, EventSink sink) {
+		if (closed) {
+			complete(sink);
+			return;
+		}
 		sink.onCompletion(() -> unsubscribe(auctionId, sink));
 		sink.onTimeout(() -> unsubscribe(auctionId, sink));
 		sink.onError(error -> unsubscribe(auctionId, sink));
-		subscribers.computeIfAbsent(auctionId, id -> new CopyOnWriteArrayList<>()).add(sink);
+		subscribers.compute(auctionId, (id, sinks) -> {
+			List<EventSink> list = sinks == null ? new CopyOnWriteArrayList<>() : sinks;
+			list.add(sink);
+			return list;
+		});
 		deliver(auctionId, sink, () -> sink.comment(CONNECTED));
 	}
 
@@ -59,16 +72,21 @@ public class AuctionEventBroker {
 
 	/** Ends every stream, so a shutdown does not wait for clients that would stay connected. They reconnect. */
 	public void closeAll() {
+		closed = true;
 		subscribers.forEach((auctionId, sinks) -> {
 			for (EventSink sink : sinks) {
 				unsubscribe(auctionId, sink);
-				try {
-					sink.complete();
-				} catch (RuntimeException alreadyClosed) {
-					log.debug("Subscriber was already closed: {}", alreadyClosed.toString());
-				}
+				complete(sink);
 			}
 		});
+	}
+
+	private static void complete(EventSink sink) {
+		try {
+			sink.complete();
+		} catch (RuntimeException alreadyClosed) {
+			log.debug("Subscriber was already closed: {}", alreadyClosed.toString());
+		}
 	}
 
 	private void deliver(long auctionId, EventSink sink, Send send) {

@@ -1,8 +1,13 @@
 package com.carrefour.kata.bidanddrive.auction.adapter.out.events;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -39,6 +44,34 @@ class AuctionEventBrokerTests {
 		broker.subscribe(5, gone);
 
 		assertThat(broker.subscriberCount(5)).isZero();
+	}
+
+	@RepeatedTest(20)
+	void a_subscribe_racing_the_last_unsubscribe_is_never_lost() throws Exception {
+		try (ExecutorService threads = Executors.newFixedThreadPool(2)) {
+			for (int round = 0; round < 500; round++) {
+				AuctionEventBroker fresh = new AuctionEventBroker();
+				FakeSink leaving = new FakeSink();
+				FakeSink joining = new FakeSink();
+				fresh.subscribe(5, leaving);
+				CyclicBarrier start = new CyclicBarrier(2);
+
+				Future<?> unsubscribe = threads.submit(() -> {
+					start.await();
+					fresh.unsubscribe(5, leaving);
+					return null;
+				});
+				Future<?> subscribe = threads.submit(() -> {
+					start.await();
+					fresh.subscribe(5, joining);
+					return null;
+				});
+				unsubscribe.get();
+				subscribe.get();
+
+				assertThat(fresh.subscriberCount(5)).as("round %d", round).isEqualTo(1);
+			}
+		}
 	}
 
 	@Test
@@ -138,6 +171,17 @@ class AuctionEventBrokerTests {
 		assertThat(onSix.completed).isTrue();
 		assertThat(broker.subscriberCount(5)).isZero();
 		assertThat(broker.subscriberCount(6)).isZero();
+	}
+
+	@Test
+	void a_stream_opened_after_closing_is_ended_at_once() {
+		broker.closeAll();
+		FakeSink late = new FakeSink();
+
+		broker.subscribe(5, late);
+
+		assertThat(late.completed).isTrue();
+		assertThat(broker.subscriberCount(5)).isZero();
 	}
 
 	@Test
