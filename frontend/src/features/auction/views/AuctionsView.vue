@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import UserSwitcher from '../../../components/UserSwitcher.vue'
+import AppHeader from '../../../components/AppHeader.vue'
 import { fetchOpenAuctions } from '../api'
 import AuctionCard from '../components/AuctionCard.vue'
 import type { AuctionListPage } from '../types'
@@ -42,30 +42,19 @@ onMounted(() => load(0))
 
 <template>
   <div class="min-h-dvh">
-    <header class="border-b border-border">
-      <div class="container-app flex flex-wrap items-center gap-x-6 gap-y-3 py-4">
-        <a href="/" class="text-lg font-bold no-underline">BidAndDrive</a>
-
-        <nav class="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Main">
-          <a href="/auctions" class="no-underline">Auctions</a>
-          <span class="text-ink-muted" aria-disabled="true">Watch list</span>
-          <span class="text-ink-muted" aria-disabled="true">About</span>
-        </nav>
-
-        <div class="flex w-full flex-wrap items-center gap-3 sm:ml-auto sm:w-auto">
-          <label for="auction-search" class="sr-only">Search auctions</label>
-          <input
-            id="auction-search"
-            type="search"
-            class="field sm:w-80"
-            placeholder="Search for cars (ex. BMW, Audi, Ford)"
-          />
-          <UserSwitcher />
-          <RouterLink to="/auctions/new" class="btn btn-outline">Sell a car</RouterLink>
-          <button type="button" class="btn btn-primary">Sign up</button>
-        </div>
-      </div>
-    </header>
+    <AppHeader>
+      <template #search>
+        <label for="auction-search" class="sr-only">Search auctions</label>
+        <input
+          id="auction-search"
+          type="search"
+          class="field sm:w-80"
+          placeholder="Search for cars (ex. BMW, Audi, Ford)"
+        />
+      </template>
+      <RouterLink to="/auctions/new" class="btn btn-outline">Sell a car</RouterLink>
+      <button type="button" class="btn btn-primary">Sign up</button>
+    </AppHeader>
 
     <main class="container-app stack-section py-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
