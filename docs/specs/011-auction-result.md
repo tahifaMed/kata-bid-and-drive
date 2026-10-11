@@ -1,7 +1,7 @@
 # 011: Auction result
 
 Branch: `feat/011-auction-result`  
-Status: in-progress
+Status: done
 
 ## User story
 > As a buyer or a seller, I can see how an auction ended once its end time has passed, so that everyone knows who won and at what price.
@@ -52,7 +52,7 @@ No new endpoint, no migration and no new event type.
 1. [x] Domain: `AuctionPhase`, `Auction.phaseAt(now)` with `isBiddableAt` delegating, `AuctionOutcome` (`SOLD`, `NO_BIDS`), `BidderStanding.status(now)` with `WON` and `LOST`. Unit tests with a fixed clock. Covers criteria: 1, 2, 4, 5 (rules).
 2. [x] Backend: `AuctionDetail` and `MyBidView` carry the computed values. `GetAuctionDetail` and `ListMyBids` use one instant per request. `AuctionResponse.status` becomes `AuctionPhase`, and `place-bid` keys off `phase == OPEN`. The detail returns `status`, `outcome` and `winnerName`; the create response is `OPEN`; my-bids and `myBid` show `WON` and `LOST`. Web and integration tests with a fixed clock. Covers criteria: 1, 2, 3, 4, 5.
 3. [x] Frontend: types, `AuctionResultBanner`, `PriceSummary` closed state, bid panel hidden at local `endsAt`, refetch at zero with retry, refetch without a toast on `bid-placed` while closed, `MyBidItem` badges. Covers criteria: 6, 7, 8, 9.
-4. [ ] Docs and comments: replace the stale 011 notes (scheduled closer, `auction-closed`, reserve, V5). The notes are in 004, 005, 006, 007 (the closed rule), 008, 009 and ADR 0015. The comments are in `Auction.java`, `BidderStatus.java`, `AuctionDetail.java`, `AuctionController.java`, `MyBidItem.vue` and `bidding/types.ts`. No criteria.
+4. [x] Docs and comments: replace the stale 011 notes (scheduled closer, `auction-closed`, reserve, V5). The notes are in 004, 005, 006, 007 (the closed rule), 008, 009 and ADR 0015. The comments are in `Auction.java`, `BidderStatus.java`, `AuctionDetail.java`, `AuctionController.java`, `MyBidItem.vue` and `bidding/types.ts`. No criteria.
 
 ## Decisions
 - The result is worked out on read, not stored by a scheduled job ([ADR 0016](../adr/0016-auction-result-on-read.md)). There is no closer and one time rule is shared with 007. The window of about one transaction is accepted (see Domain rules).

@@ -26,7 +26,7 @@ Given / When / Then. Each criterion maps to at least one test. Money is a two-de
 ## Domain rules and edge cases
 - A bidder's status is `WINNING` when they are the auction's highest bidder, otherwise `OUTBID`. Bids are strictly increasing, so there are no ties. The rule lives in a domain type (`BidderStanding`), used by both the list and the detail.
 - `myHighestBid` is the maximum of the caller's bids on that auction.
-- The list includes every auction the caller has bid on, open or ended. Ended auctions keep `WINNING` or `OUTBID` until 011 adds WON and LOST. The UI shows "Ended" instead of the time left.
+- The list includes every auction the caller has bid on, open or ended. Since 011, ended auctions show `WON` or `LOST`. The UI shows "Ended" instead of the time left.
 - Sort is `endsAt` ascending, then `auctionId` ascending.
 - The auction and the caller's highest bid are read in one SQL statement, so a concurrent bid cannot pair `WINNING` with a `myHighestBid` below `currentBid`. Two statements in one transaction would not be enough under Postgres READ COMMITTED.
 - A malformed `X-User-Id` never queries the user list (003).
@@ -57,7 +57,7 @@ Given / When / Then. Each criterion maps to at least one test. Money is a two-de
 - The detail stays public and ignores an invalid identity instead of answering 401: [ADR 0014](../adr/0014-optional-identity-on-public-reads.md).
 - `/api/me/bids` is not paged: one buyer's bids are few. This is an exception to the paged-collection convention.
 - Each item links to its auction with `_links.auction`, as 007 does for a bid. The item is not a resource of its own.
-- No new migration. The bidder query scans `bid` by `bidder_id`, which is fine at kata scale. V5 and V6 stay with 011 and 013.
+- No new migration. The bidder query scans `bid` by `bidder_id`, which is fine at kata scale. V6 stays with 013; 011 needs no migration.
 
 ## Out of scope
 - Winning or losing after an auction closes (011), live status updates (010), using `myBid` on the detail page, bid history for the caller across filters, paging.

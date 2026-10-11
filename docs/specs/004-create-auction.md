@@ -27,7 +27,7 @@ Given / When / Then. Each criterion maps to at least one test.
 - Car fields: `make` and `model` required, 1 to 60 characters; `year` integer in 1886 to next year; `mileageKm` integer >= 0; `description` optional, up to 2000 characters; `imageUrl` optional, an `http` or `https` URL of at most 2048 characters.
 - Any user may sell. The seller is always the caller; the caller cannot choose another seller.
 - Creation is not idempotent: every valid POST creates a new auction.
-- The reserve price is not part of this spec (see 011).
+- There is no reserve price. 011 settled on none ([ADR 0016](../adr/0016-auction-result-on-read.md)).
 
 ## API (backend)
 | Method | Path | Request | Response | Errors |
@@ -60,5 +60,5 @@ Given / When / Then. Each criterion maps to at least one test.
 - Money as strings: [ADR 0004](../adr/0004-money-as-json-string.md).
 
 ## Out of scope
-- Editing or cancelling an auction, photo upload, reserve price (011), buy-it-now.
+- Editing or cancelling an auction, photo upload, reserve price, buy-it-now.
 - Bid rules (own car, self-outbid, bid after close, concurrent bids): see 006 and 007.
