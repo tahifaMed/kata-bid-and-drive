@@ -1,9 +1,10 @@
-import { createPinia } from 'pinia'
+import { createPinia, type Pinia } from 'pinia'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../api/client'
 import { placeBid } from '../../bidding/api'
+import { useIdentityStore } from '../../identity/stores/identity'
 import { fetchAuction } from '../api'
 import { auctionDetail } from '../testing/auctionDetailFixture'
 import { bidPlaced, FakeEventSource } from '../testing/FakeEventSource'
@@ -28,6 +29,8 @@ beforeEach(() => {
   sessionStorage.clear()
 })
 
+let pinia: Pinia
+
 async function renderAt(path: string, userId = 1) {
   sessionStorage.setItem('bidanddrive.currentUserId', String(userId))
   const router = createRouter({
@@ -39,7 +42,8 @@ async function renderAt(path: string, userId = 1) {
   })
   await router.push(path)
   await router.isReady()
-  render(AuctionDetailView, { global: { plugins: [createPinia(), router] } })
+  pinia = createPinia()
+  render(AuctionDetailView, { global: { plugins: [pinia, router] } })
   return router
 }
 
@@ -242,6 +246,104 @@ describe('AuctionDetailView', () => {
       await screen.findByText('This auction was not found.')
 
       expect(FakeEventSource.instances).toHaveLength(0)
+    })
+  })
+
+  describe('outbid and live status', () => {
+    it('tells me I was outbid and shows the new minimum when another user outbids me', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 2 }))
+      await renderAt('/auctions/5', 2)
+      expect(await screen.findByText('You are the highest bidder.')).toBeTruthy()
+
+      FakeEventSource.latest().emit(
+        bidPlaced({ bidderId: 3, highestBidderId: 3, bidCount: 2, minNextBid: '12600.00' }),
+      )
+
+      expect(
+        await screen.findByText('You have been outbid. The minimum bid is now USD 12,600.00.'),
+      ).toBeTruthy()
+      expect(screen.getByText('Minimum bid: USD 12,600.00')).toBeTruthy()
+      expect(screen.queryByText('You are the highest bidder.')).toBeNull()
+    })
+
+    it('shows no outbid message for my own bid and says I am the highest bidder', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 3 }))
+      await renderAt('/auctions/5', 2)
+      await screen.findByLabelText('Your bid (USD)')
+
+      FakeEventSource.latest().emit(bidPlaced({ bidderId: 2, highestBidderId: 2, bidCount: 2 }))
+
+      expect(await screen.findByText('You are the highest bidder.')).toBeTruthy()
+      expect(screen.queryByText(/You have been outbid/)).toBeNull()
+    })
+
+    it('shows no outbid message when I was not the highest bidder', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 3 }))
+      await renderAt('/auctions/5', 2)
+      await screen.findByLabelText('Your bid (USD)')
+
+      FakeEventSource.latest().emit(
+        bidPlaced({ bidderId: 4, highestBidderId: 4, bidCount: 2, minNextBid: '12600.00' }),
+      )
+
+      expect(await screen.findByText('Minimum bid: USD 12,600.00')).toBeTruthy()
+      expect(screen.queryByText(/You have been outbid/)).toBeNull()
+    })
+
+    it('hides the outbid message when it is dismissed', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 2 }))
+      await renderAt('/auctions/5', 2)
+      await screen.findByText('You are the highest bidder.')
+      FakeEventSource.latest().emit(bidPlaced({ highestBidderId: 3, bidCount: 2 }))
+      await screen.findByText(/You have been outbid/)
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+      expect(screen.queryByText(/You have been outbid/)).toBeNull()
+    })
+
+    it('recalculates my status without reconnecting when I switch user', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 2 }))
+      await renderAt('/auctions/5', 3)
+      await screen.findByLabelText('Your bid (USD)')
+
+      useIdentityStore(pinia).setUser(2)
+
+      expect(await screen.findByText('You are the highest bidder.')).toBeTruthy()
+      expect(FakeEventSource.instances).toHaveLength(1)
+    })
+
+    it('says nothing about live updates until the stream opens, then says live', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail())
+      await renderAt('/auctions/5')
+      await screen.findByRole('region', { name: 'Price' })
+      expect(screen.queryByText('Live')).toBeNull()
+
+      FakeEventSource.latest().open()
+
+      expect(await screen.findByText('Live')).toBeTruthy()
+    })
+
+    it('says it is reconnecting after an error', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail())
+      await renderAt('/auctions/5')
+      await screen.findByRole('region', { name: 'Price' })
+      FakeEventSource.latest().open()
+
+      FakeEventSource.latest().fail()
+
+      expect(await screen.findByText('Reconnecting')).toBeTruthy()
+    })
+
+    it('says live updates are unavailable after 5 errors and keeps the auction shown', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ currentBid: '12345.00' }))
+      await renderAt('/auctions/5')
+      await screen.findByRole('region', { name: 'Price' })
+
+      for (let i = 0; i < 5; i++) FakeEventSource.latest().fail()
+
+      expect(await screen.findByText('Live updates unavailable')).toBeTruthy()
+      expect(screen.getByText('USD 12,345.00')).toBeTruthy()
     })
   })
 })

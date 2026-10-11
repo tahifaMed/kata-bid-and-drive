@@ -40,7 +40,7 @@ Consumes `GET /api/auctions/{id}/events` (009) and `GET /api/auctions/{id}` (006
 ## Slices
 1. [x] Composable `useAuctionStream`: connect, typed events, cleanup on unmount, error counting, unit tests with a fake `EventSource`. Covers criteria: 5, 6, 8.
 2. [x] `AuctionDetailView` applies `bid-placed` to price, count, minimum and history; refetch on reconnect; `endsAt` update. Covers criteria: 1, 4, 7.
-3. Outbid toast and own-bid handling using the selected user id; live indicator. Covers criteria: 2, 3.
+3. [x] Outbid toast and own-bid handling using the selected user id; live indicator. Covers criteria: 2, 3.
 
 ## Decisions
 - Ignoring stale events by `bidCount` is a kata choice to handle out-of-order delivery without a sequence number.

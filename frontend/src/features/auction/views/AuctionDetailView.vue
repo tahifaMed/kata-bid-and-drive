@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import AppHeader from '../../../components/AppHeader.vue'
+import AppToast from '../../../components/AppToast.vue'
 import BidPanel from '../../bidding/components/BidPanel.vue'
+import { useIdentityStore } from '../../identity/stores/identity'
 import BidHistory from '../components/BidHistory.vue'
 import CarDetails from '../components/CarDetails.vue'
 import PriceSummary from '../components/PriceSummary.vue'
 import { useNow } from '../../../composables/useNow'
 import { useAuctionDetail } from '../composables/useAuctionDetail'
 import { useAuctionStream } from '../composables/useAuctionStream'
+import { formatCurrency } from '../format'
+import type { BidPlacedEvent } from '../types'
 
 const route = useRoute()
 const { state, auction, load, retry, refresh, applyBidPlaced } = useAuctionDetail()
 const now = useNow()
+const identity = useIdentityStore()
 
 // The same view is reused when only the id changes, so watch the param instead of loading once.
 watch(
@@ -25,9 +30,38 @@ const biddable = computed(() => Boolean(auction.value?._links['place-bid']))
 
 // Only an auction that was found gets a stream, so an unknown id does not retry against a 404.
 const streamedId = computed(() => (state.value === 'ready' ? (auction.value?.id ?? null) : null))
-useAuctionStream(streamedId, {
-  onBidPlaced: applyBidPlaced,
+const outbidMessage = ref<string | null>(null)
+
+/** Applies the event, and tells the selected user when it took the lead from them. */
+function onBidPlaced(event: BidPlacedEvent): void {
+  const me = identity.currentUserId
+  const wasHighest = auction.value?.highestBidderId === me
+  if (applyBidPlaced(event) && wasHighest && event.data.highestBidderId !== me) {
+    outbidMessage.value = `You have been outbid. The minimum bid is now ${formatCurrency(event.data.minNextBid)}.`
+  }
+}
+
+// The message belongs to one user on one auction.
+watch([() => identity.currentUserId, streamedId], () => {
+  outbidMessage.value = null
+})
+
+const { status: streamStatus } = useAuctionStream(streamedId, {
+  onBidPlaced,
   onReconnected: refresh,
+})
+
+const liveLabel = computed(() => {
+  switch (streamStatus.value) {
+    case 'live':
+      return 'Live'
+    case 'reconnecting':
+      return 'Reconnecting'
+    case 'unavailable':
+      return 'Live updates unavailable'
+    default:
+      return ''
+  }
 })
 </script>
 
@@ -57,7 +91,10 @@ useAuctionStream(streamedId, {
 
         <div class="stack-section">
           <section class="stack" aria-labelledby="price-title">
-            <h2 id="price-title" class="text-title font-bold">Price</h2>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 id="price-title" class="text-title font-bold">Price</h2>
+              <p role="status" class="text-meta text-ink-muted">{{ liveLabel }}</p>
+            </div>
             <PriceSummary :auction="auction" :now="now" />
           </section>
 
@@ -74,5 +111,7 @@ useAuctionStream(streamedId, {
         </div>
       </div>
     </main>
+
+    <AppToast v-if="outbidMessage" :message="outbidMessage" @dismiss="outbidMessage = null" />
   </div>
 </template>
