@@ -13,5 +13,5 @@ description: Create one small, clear Conventional Commit for the staged logical 
    - Body: only if the why is not obvious, at most 2 short lines. No file lists.
    - Types: feat, fix, refactor, test, docs, chore.
 5. Commit with a heredoc so the body formats correctly. End with the co-author trailer:
-   `Co-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>`
+   `Co-Authored-By: <current Claude model name> <noreply@anthropic.com>`
 6. Never use `--no-verify`. If a hook blocks the commit, fix the message or the change.

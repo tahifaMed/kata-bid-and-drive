@@ -16,4 +16,4 @@ description: Push the current feature branch and open a GitHub pull request link
      - Test evidence: the commands run and their results
      - Open risks or decisions, if any
    - End the body with: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
-5. Print the PR URL. Stop for human review.
+5. Print the PR URL, then run `/review-pr`.

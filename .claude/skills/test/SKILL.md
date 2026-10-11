@@ -1,7 +1,6 @@
 ---
 name: test
 description: Run the full backend and frontend test and lint suites for the current branch and report results honestly. Use before committing a slice's final state, before opening a PR, or when asked whether the build is green.
-disable-model-invocation: true
 ---
 
 # Test
