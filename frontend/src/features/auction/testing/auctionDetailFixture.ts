@@ -21,7 +21,7 @@ export function auctionDetail(overrides: Partial<AuctionResponse> = {}): Auction
     minNextBid: '12000.00',
     bidCount: 0,
     highestBidderId: null,
-    endsAt: '2026-10-12T18:00:00Z',
+    endsAt: '2100-10-12T18:00:00Z',
     bids: [],
     _links: {
       self: { href: 'http://localhost/api/auctions/5' },

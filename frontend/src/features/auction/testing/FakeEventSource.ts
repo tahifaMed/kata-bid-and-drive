@@ -86,7 +86,7 @@ export function bidPlaced(
       currentBid: '12000.00',
       minNextBid: '12100.00',
       bidCount: 1,
-      endsAt: '2026-10-12T18:00:00Z',
+      endsAt: '2100-10-12T18:00:00Z',
       extended: false,
       ...data,
     },

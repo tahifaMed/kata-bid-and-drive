@@ -51,7 +51,7 @@ No new endpoint, no migration and no new event type.
 ## Slices
 1. [x] Domain: `AuctionPhase`, `Auction.phaseAt(now)` with `isBiddableAt` delegating, `AuctionOutcome` (`SOLD`, `NO_BIDS`), `BidderStanding.status(now)` with `WON` and `LOST`. Unit tests with a fixed clock. Covers criteria: 1, 2, 4, 5 (rules).
 2. [x] Backend: `AuctionDetail` and `MyBidView` carry the computed values. `GetAuctionDetail` and `ListMyBids` use one instant per request. `AuctionResponse.status` becomes `AuctionPhase`, and `place-bid` keys off `phase == OPEN`. The detail returns `status`, `outcome` and `winnerName`; the create response is `OPEN`; my-bids and `myBid` show `WON` and `LOST`. Web and integration tests with a fixed clock. Covers criteria: 1, 2, 3, 4, 5.
-3. [ ] Frontend: types, `AuctionResultBanner`, `PriceSummary` closed state, bid panel hidden at local `endsAt`, refetch at zero with retry, refetch without a toast on `bid-placed` while closed, `MyBidItem` badges. Covers criteria: 6, 7, 8, 9.
+3. [x] Frontend: types, `AuctionResultBanner`, `PriceSummary` closed state, bid panel hidden at local `endsAt`, refetch at zero with retry, refetch without a toast on `bid-placed` while closed, `MyBidItem` badges. Covers criteria: 6, 7, 8, 9.
 4. [ ] Docs and comments: replace the stale 011 notes (scheduled closer, `auction-closed`, reserve, V5). The notes are in 004, 005, 006, 007 (the closed rule), 008, 009 and ADR 0015. The comments are in `Auction.java`, `BidderStatus.java`, `AuctionDetail.java`, `AuctionController.java`, `MyBidItem.vue` and `bidding/types.ts`. No criteria.
 
 ## Decisions

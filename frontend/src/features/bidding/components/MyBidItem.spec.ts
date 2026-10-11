@@ -53,6 +53,22 @@ describe('MyBidItem', () => {
     expect(screen.getByText(/Current bid USD\s1,000\.00/)).toBeTruthy()
   })
 
+  it('shows a won badge with the winning style once I won', () => {
+    renderItem(myBid({ status: 'WON', endsAt: '2026-10-10T12:00:00Z' }))
+
+    const badge = screen.getByText('Won')
+    expect(badge.classList.contains('status-winning')).toBe(true)
+    expect(screen.getByText('Ended')).toBeTruthy()
+  })
+
+  it('shows a lost badge with the outbid style once I lost', () => {
+    renderItem(myBid({ status: 'LOST', myHighestBid: '900.00', currentBid: '1000.00', endsAt: '2026-10-10T12:00:00Z' }))
+
+    const badge = screen.getByText('Lost')
+    expect(badge.classList.contains('status-outbid')).toBe(true)
+    expect(screen.getByText('Ended')).toBeTruthy()
+  })
+
   it('shows the time left while the auction runs', () => {
     renderItem(myBid())
 

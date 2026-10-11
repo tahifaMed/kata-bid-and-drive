@@ -250,6 +250,149 @@ describe('AuctionDetailView', () => {
     })
   })
 
+  describe('auction result', () => {
+    const SELF = { self: { href: 'http://localhost/api/auctions/5' } }
+
+    function closed(overrides: Parameters<typeof auctionDetail>[0] = {}) {
+      return auctionDetail({
+        status: 'CLOSED',
+        outcome: 'SOLD',
+        winnerName: 'B***',
+        currentBid: '5200.00',
+        bidCount: 3,
+        highestBidderId: 2,
+        endsAt: '2026-10-11T12:00:00Z',
+        _links: SELF,
+        ...overrides,
+      })
+    }
+
+    it('shows who won at what price, and no bid panel or minimum, on a sold auction', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(closed())
+      await renderAt('/auctions/5', 2)
+
+      const result = await screen.findByRole('region', { name: 'Result' })
+      expect(within(result).getByText('Sold to B*** for USD 5,200.00')).toBeTruthy()
+      expect(screen.getByText('Final price')).toBeTruthy()
+      expect(screen.queryByText('Minimum next bid')).toBeNull()
+      expect(screen.queryByRole('region', { name: 'Place a bid' })).toBeNull()
+    })
+
+    it('says no bids on a closed auction nobody bid on', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(
+        closed({ outcome: 'NO_BIDS', winnerName: undefined, currentBid: '12000.00', bidCount: 0, highestBidderId: null }),
+      )
+      await renderAt('/auctions/5', 1)
+
+      const result = await screen.findByRole('region', { name: 'Result' })
+      expect(within(result).getByText('No bids')).toBeTruthy()
+      expect(screen.getByText('Starting price')).toBeTruthy()
+    })
+
+    it('shows no result while the auction is open', async () => {
+      vi.mocked(fetchAuction).mockResolvedValue(auctionDetail())
+      await renderAt('/auctions/5', 2)
+      await screen.findByRole('region', { name: 'Place a bid' })
+
+      expect(screen.queryByRole('region', { name: 'Result' })).toBeNull()
+    })
+
+    describe('when the countdown reaches the end', () => {
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] })
+        vi.setSystemTime(new Date('2026-10-11T11:59:58Z'))
+      })
+
+      it('fetches the auction and shows the result', async () => {
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        vi.mocked(fetchAuction).mockResolvedValueOnce(closed())
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+
+        await vi.advanceTimersByTimeAsync(2_000)
+
+        expect(await screen.findByText('Sold to B*** for USD 5,200.00')).toBeTruthy()
+        expect(screen.queryByRole('region', { name: 'Place a bid' })).toBeNull()
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+      })
+
+      it('hides the bid panel at the end even before the result arrives', async () => {
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        vi.mocked(fetchAuction).mockReturnValueOnce(new Promise(() => {}))
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+
+        await vi.advanceTimersByTimeAsync(2_000)
+
+        expect(screen.queryByRole('region', { name: 'Place a bid' })).toBeNull()
+        expect(screen.getByText('Ended')).toBeTruthy()
+      })
+
+      it('keeps counting down when the auction was extended', async () => {
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:30Z' }))
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+
+        await vi.advanceTimersByTimeAsync(2_000)
+
+        expect(screen.getByText('Ending')).toBeTruthy()
+        expect(screen.getByRole('region', { name: 'Place a bid' })).toBeTruthy()
+        expect(screen.queryByRole('region', { name: 'Result' })).toBeNull()
+        await vi.advanceTimersByTimeAsync(10_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+      })
+
+      it('tries 3 times, 2 seconds apart, while the server still says open', async () => {
+        vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+
+        await vi.advanceTimersByTimeAsync(2_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+        await vi.advanceTimersByTimeAsync(2_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(3)
+        await vi.advanceTimersByTimeAsync(2_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(4)
+        await vi.advanceTimersByTimeAsync(20_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(4)
+        expect(screen.queryByRole('region', { name: 'Place a bid' })).toBeNull()
+      })
+
+      it('counts a failed fetch as one of the 3 tries', async () => {
+        vi.mocked(fetchAuction).mockResolvedValueOnce(auctionDetail({ endsAt: '2026-10-11T12:00:00Z' }))
+        vi.mocked(fetchAuction).mockRejectedValueOnce(new ApiError(502, 'Bad gateway'))
+        vi.mocked(fetchAuction).mockResolvedValueOnce(closed())
+        await renderAt('/auctions/5', 3)
+        await screen.findByRole('region', { name: 'Place a bid' })
+
+        await vi.advanceTimersByTimeAsync(2_000)
+        expect(fetchAuction).toHaveBeenCalledTimes(2)
+        await vi.advanceTimersByTimeAsync(2_000)
+
+        expect(await screen.findByText('Sold to B*** for USD 5,200.00')).toBeTruthy()
+        expect(fetchAuction).toHaveBeenCalledTimes(3)
+      })
+    })
+
+    it('fetches the auction instead of patching it when a bid event arrives after it closed', async () => {
+      vi.mocked(fetchAuction).mockResolvedValueOnce(closed({ currentBid: '5200.00', bidCount: 3, highestBidderId: 2 }))
+      vi.mocked(fetchAuction).mockResolvedValueOnce(
+        closed({ winnerName: 'C***', currentBid: '5300.00', bidCount: 4, highestBidderId: 3 }),
+      )
+      await renderAt('/auctions/5', 2)
+      await screen.findByText('Sold to B*** for USD 5,200.00')
+
+      FakeEventSource.latest().emit(
+        bidPlaced({ bidderId: 3, bidderName: 'C***', highestBidderId: 3, amount: '5300.00', currentBid: '5300.00', bidCount: 4 }),
+      )
+
+      expect(await screen.findByText('Sold to C*** for USD 5,300.00')).toBeTruthy()
+      expect(fetchAuction).toHaveBeenCalledTimes(2)
+      expect(screen.queryByText(/You have been outbid/)).toBeNull()
+    })
+  })
+
   describe('outbid and live status', () => {
     it('tells me I was outbid and shows the new minimum when another user outbids me', async () => {
       vi.mocked(fetchAuction).mockResolvedValue(auctionDetail({ bidCount: 1, highestBidderId: 2 }))

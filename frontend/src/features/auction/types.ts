@@ -47,10 +47,14 @@ export interface AuctionBid {
   bidderName: string
 }
 
+/** How a closed auction ended (spec 011). */
+export type AuctionOutcome = 'SOLD' | 'NO_BIDS'
+
 /** The auction detail (spec 006). The create response has the same shape (ADR 0010). */
 export interface AuctionResponse {
   id: number
-  status: 'OPEN'
+  /** `CLOSED` from `endsAt` on, worked out by the server at read time (spec 011, ADR 0016). */
+  status: 'OPEN' | 'CLOSED'
   car: CarDetails
   seller: { displayName: string }
   /** Lets the bid panel tell the seller apart (spec 007). */
@@ -66,7 +70,11 @@ export interface AuctionResponse {
   /** `place-bid` is present only while the auction takes bids. */
   _links: Record<string, { href: string }>
   /** The selected user's own bid, present only when they bid on this auction (spec 008). */
-  myBid?: { highestAmount: string; status: 'WINNING' | 'OUTBID' }
+  myBid?: { highestAmount: string; status: 'WINNING' | 'OUTBID' | 'WON' | 'LOST' }
+  /** Present only when `CLOSED` (spec 011). */
+  outcome?: AuctionOutcome
+  /** The masked winner, for example "B***". Present only when `SOLD`. */
+  winnerName?: string
 }
 
 /** The `data` of a `bid-placed` event (spec 009). Money is a string (ADR 0004). */

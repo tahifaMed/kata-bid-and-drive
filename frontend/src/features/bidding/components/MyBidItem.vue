@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency, formatTimeLeft } from '../../auction/format'
-import type { MyBid } from '../types'
+import type { BidderStatus, MyBid } from '../types'
 
 // Used when the seller gave no photo. Decorative: the title already says what the car is.
 const NO_PHOTO = '/images/auctions/no-photo.svg'
@@ -18,9 +18,16 @@ const title = computed(() => {
   return `${year} ${make} ${model}`
 })
 
-const winning = computed(() => props.item.status === 'WINNING')
+const BADGES: Record<BidderStatus, { label: string; style: string }> = {
+  WINNING: { label: 'Winning', style: 'status-winning' },
+  OUTBID: { label: 'Outbid', style: 'status-outbid' },
+  WON: { label: 'Won', style: 'status-winning' },
+  LOST: { label: 'Lost', style: 'status-outbid' },
+}
 
-// Ended auctions stay listed with their last status until spec 011 adds WON and LOST.
+const badge = computed(() => BADGES[props.item.status])
+
+// Ended auctions stay listed, with WON or LOST once the server sees them closed (spec 011).
 const timeLeft = computed(() =>
   Date.parse(props.item.endsAt) <= props.now ? 'Ended' : formatTimeLeft(props.item.endsAt, props.now),
 )
@@ -49,9 +56,9 @@ const timeLeft = computed(() =>
         <h2 class="auction-card-title">{{ title }}</h2>
         <span
           class="text-badge tracking-wide uppercase"
-          :class="winning ? 'status-winning' : 'status-outbid'"
+          :class="badge.style"
         >
-          {{ winning ? 'Winning' : 'Outbid' }}
+          {{ badge.label }}
         </span>
       </div>
       <p class="text-meta">Your bid {{ formatCurrency(item.myHighestBid) }}</p>
